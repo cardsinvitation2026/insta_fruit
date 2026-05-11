@@ -39,7 +39,7 @@ import { CartService } from '../core/services/cart.service';
       <h3 class="text-[15px] font-bold text-text-primary leading-tight">{{ product().name }}</h3>
       <p class="text-[11px] text-text-secondary mb-3">{{ product().unit }}</p>
       <div class="flex items-center justify-between">
-        <span class="text-[16px] font-extrabold text-text-primary">\${{ product().price.toFixed(2) }}</span>
+        <span class="text-[16px] font-extrabold text-text-primary">₹{{ product().price.toFixed(2) }}</span>
         <button
           [attr.data-testid]="'add-product-' + product().id"
           type="button"

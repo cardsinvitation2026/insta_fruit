@@ -42,7 +42,7 @@ import { ProductCardComponent } from '../../shared/product-card.component';
               <h1 class="text-[24px] font-extrabold text-text-primary leading-tight">{{ product()!.name }}</h1>
               <p class="text-[13px] text-text-secondary mt-1">{{ product()!.unit }}</p>
             </div>
-            <span data-testid="product-price" class="text-[22px] font-extrabold text-primary">\${{ product()!.price.toFixed(2) }}</span>
+            <span data-testid="product-price" class="text-[22px] font-extrabold text-primary">₹{{ product()!.price.toFixed(2) }}</span>
           </div>
 
           <div class="flex items-center justify-between mt-5">
@@ -80,7 +80,7 @@ import { ProductCardComponent } from '../../shared/product-card.component';
             class="w-full h-14 bg-primary text-white rounded-btn flex items-center justify-center gap-2 text-[15px] font-bold shadow-green active:scale-[0.98]"
           >
             <lucide-icon [img]="BagIcon" [size]="18"></lucide-icon>
-            Add to Cart • \${{ (product()!.price * qty()).toFixed(2) }}
+            Add to Cart • ₹{{ (product()!.price * qty()).toFixed(2) }}
           </button>
         </div>
       </div>

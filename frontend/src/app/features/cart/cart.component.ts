@@ -38,7 +38,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
               <div class="flex-1 min-w-0">
                 <h3 class="text-[14px] font-bold text-text-primary truncate">{{ i.product.name }}</h3>
                 <p class="text-[11px] text-text-secondary">{{ i.product.unit }}</p>
-                <p class="text-[15px] font-extrabold text-primary mt-1">\${{ (i.product.price * i.quantity).toFixed(2) }}</p>
+                <p class="text-[15px] font-extrabold text-primary mt-1">₹{{ (i.product.price * i.quantity).toFixed(2) }}</p>
               </div>
               <div class="flex flex-col items-end gap-2">
                 <button [attr.data-testid]="'remove-' + i.product.id" (click)="remove(i.product.id)" class="text-text-secondary">
@@ -61,10 +61,10 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
         <!-- Summary -->
         <div class="px-5 mt-6">
           <div class="bg-white rounded-card p-4 shadow-soft space-y-2">
-            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Subtotal</span><span class="font-semibold" data-testid="cart-subtotal">\${{ subtotal().toFixed(2) }}</span></div>
-            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Delivery fee</span><span class="font-semibold">\${{ deliveryFee().toFixed(2) }}</span></div>
+            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Subtotal</span><span class="font-semibold" data-testid="cart-subtotal">₹{{ subtotal().toFixed(2) }}</span></div>
+            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Delivery fee</span><span class="font-semibold">₹{{ deliveryFee().toFixed(2) }}</span></div>
             <div class="h-px bg-border-soft my-2"></div>
-            <div class="flex justify-between text-[15px] font-extrabold"><span>Total</span><span class="text-primary" data-testid="cart-total">\${{ total().toFixed(2) }}</span></div>
+            <div class="flex justify-between text-[15px] font-extrabold"><span>Total</span><span class="text-primary" data-testid="cart-total">₹{{ total().toFixed(2) }}</span></div>
           </div>
         </div>
 

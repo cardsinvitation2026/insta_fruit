@@ -70,7 +70,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
                 <p class="text-[11px] text-text-secondary">{{ o.date }} • {{ o.items }} items</p>
               </div>
               <div class="text-right">
-                <p class="text-[13px] font-extrabold text-primary">\${{ o.total }}</p>
+                <p class="text-[13px] font-extrabold text-primary">₹{{ o.total }}</p>
                 <span class="text-[10px] bg-primary-light text-primary px-2 py-0.5 rounded-full font-semibold">{{ o.status }}</span>
               </div>
             </div>

@@ -86,11 +86,11 @@ import { CartService } from '../../core/services/cart.service';
         <div>
           <h2 class="text-[14px] font-bold text-text-primary mb-2">Price Summary</h2>
           <div class="bg-white rounded-card p-4 shadow-soft space-y-2">
-            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Subtotal</span><span class="font-semibold">\${{ cart.subtotal().toFixed(2) }}</span></div>
-            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Delivery fee</span><span class="font-semibold">\${{ cart.deliveryFee().toFixed(2) }}</span></div>
+            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Subtotal</span><span class="font-semibold">₹{{ cart.subtotal().toFixed(2) }}</span></div>
+            <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Delivery fee</span><span class="font-semibold">₹{{ cart.deliveryFee().toFixed(2) }}</span></div>
             <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Discount</span><span class="font-semibold text-primary">- $0.00</span></div>
             <div class="h-px bg-border-soft my-2"></div>
-            <div class="flex justify-between text-[15px] font-extrabold"><span>Total</span><span class="text-primary">\${{ cart.total().toFixed(2) }}</span></div>
+            <div class="flex justify-between text-[15px] font-extrabold"><span>Total</span><span class="text-primary">₹{{ cart.total().toFixed(2) }}</span></div>
           </div>
         </div>
       </div>
@@ -101,7 +101,7 @@ import { CartService } from '../../core/services/cart.service';
           data-testid="place-order-btn"
           (click)="placeOrder()"
           class="w-full h-14 bg-primary text-white rounded-btn text-[15px] font-bold shadow-green active:scale-[0.98]"
-        >Place Order • \${{ cart.total().toFixed(2) }}</button>
+        >Place Order • ₹{{ cart.total().toFixed(2) }}</button>
       </div>
     </div>
   `,
