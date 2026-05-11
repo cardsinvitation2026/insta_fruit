@@ -13,7 +13,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 1,
     name: 'Orange',
-    price: 2.99,
+    price: 299.99,
     rating: 4.5,
     category: 'Fruits',
     image: 'https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=600&q=80',
@@ -24,7 +24,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 2,
     name: 'Banana',
-    price: 1.0,
+    price: 100.0,
     rating: 4.5,
     category: 'Fruits',
     image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=600&q=80',
@@ -35,7 +35,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 3,
     name: 'Kiwi',
-    price: 1.5,
+    price: 150.0,
     rating: 4.5,
     category: 'Fruits',
     image: 'https://images.unsplash.com/photo-1585059895524-72359e06133a?auto=format&fit=crop&w=600&q=80',
@@ -46,7 +46,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 4,
     name: 'Avocado',
-    price: 5.99,
+    price: 599.99,
     rating: 4.5,
     category: 'Fruits',
     image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=600&q=80',
@@ -57,7 +57,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 5,
     name: 'Strawberry',
-    price: 3.49,
+    price: 349.99,
     rating: 4.7,
     category: 'Berries',
     image: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=600&q=80',
@@ -68,7 +68,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 6,
     name: 'Mango',
-    price: 4.25,
+    price: 425.0,
     rating: 4.8,
     category: 'Fruits',
     image: 'https://images.unsplash.com/photo-1605027990121-cbae9e0642db?auto=format&fit=crop&w=600&q=80',
@@ -79,7 +79,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 7,
     name: 'Apple',
-    price: 2.20,
+    price: 220.0,
     rating: 4.4,
     category: 'Fruits',
     image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?auto=format&fit=crop&w=600&q=80',
@@ -90,7 +90,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 8,
     name: 'Blueberry',
-    price: 4.99,
+    price: 499.99,
     rating: 4.6,
     category: 'Berries',
     image: 'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=600&q=80',
