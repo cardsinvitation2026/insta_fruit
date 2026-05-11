@@ -117,9 +117,9 @@ export class CheckoutComponent {
   readonly CashIcon = Banknote;
   readonly PencilIcon = Pencil;
 
-  placeOrder() {
+  placeOrder(): void {
     this.cart.clear();
     this.router.navigate(['/order-success']);
   }
-  back() { this.location.back(); }
+  back(): void { this.location.back(); }
 }

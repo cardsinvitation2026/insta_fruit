@@ -111,9 +111,9 @@ export class ProductDetailsComponent {
     });
   }
 
-  back() { this.location.back(); }
-  toggleFav() { if (this.product()) this.cart.toggleFavorite(this.product()!.id); }
-  addToCart() {
+  back(): void { this.location.back(); }
+  toggleFav(): void { if (this.product()) this.cart.toggleFavorite(this.product()!.id); }
+  addToCart(): void {
     if (!this.product()) return;
     this.cart.add(this.product()!, this.qty());
     this.router.navigate(['/cart']);

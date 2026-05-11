@@ -89,9 +89,9 @@ export class TrackOrderComponent implements OnInit, OnDestroy {
   readonly activeIndex = signal(0);
   readonly remaining = signal(25);
   readonly etaTime = this.formatEta(25);
-  private timer?: any;
+  private timer?: ReturnType<typeof setInterval>;
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.timer = setInterval(() => {
       const idx = this.activeIndex();
       if (idx < 4) this.activeIndex.set(idx + 1);
@@ -100,9 +100,9 @@ export class TrackOrderComponent implements OnInit, OnDestroy {
     }, 3000);
   }
 
-  ngOnDestroy() { clearInterval(this.timer); }
+  ngOnDestroy(): void { clearInterval(this.timer); }
 
-  progress() {
+  progress(): number {
     return ((this.activeIndex() + 1) / 5) * 100;
   }
 
@@ -111,5 +111,5 @@ export class TrackOrderComponent implements OnInit, OnDestroy {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  back() { this.location.back(); }
+  back(): void { this.location.back(); }
 }

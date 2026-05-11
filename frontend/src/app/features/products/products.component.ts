@@ -53,5 +53,5 @@ export class ProductsComponent {
   active = 'All';
   readonly ChevronIcon = ChevronLeft;
   readonly FilterIcon = SlidersHorizontal;
-  back() { this.location.back(); }
+  back(): void { this.location.back(); }
 }

@@ -96,10 +96,10 @@ export class CartComponent {
   readonly MinusIcon = Minus;
   readonly BagIcon = ShoppingBag;
 
-  inc(id: number) { this.cart.increment(id); }
-  dec(id: number) { this.cart.decrement(id); }
-  remove(id: number) { this.cart.remove(id); }
-  checkout() { this.router.navigate(['/checkout']); }
-  goShop() { this.router.navigate(['/products']); }
-  back() { this.location.back(); }
+  inc(id: number): void { this.cart.increment(id); }
+  dec(id: number): void { this.cart.decrement(id); }
+  remove(id: number): void { this.cart.remove(id); }
+  checkout(): void { this.router.navigate(['/checkout']); }
+  goShop(): void { this.router.navigate(['/products']); }
+  back(): void { this.location.back(); }
 }

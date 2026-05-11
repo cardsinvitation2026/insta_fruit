@@ -39,7 +39,7 @@ import { Router } from '@angular/router';
 })
 export class SplashComponent implements OnInit {
   private readonly router = inject(Router);
-  ngOnInit() {
+  ngOnInit(): void {
     setTimeout(() => this.router.navigate(['/login']), 2000);
   }
 }

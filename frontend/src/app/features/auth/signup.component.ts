@@ -102,7 +102,7 @@ export class SignupComponent {
   readonly EyeIcon = Eye;
   readonly EyeOffIcon = EyeOff;
 
-  onSubmit() {
+  onSubmit(): void {
     this.router.navigate(['/home']);
   }
 }

@@ -62,15 +62,15 @@ export class ProductCardComponent {
 
   readonly isFav = computed(() => this.cart.isFavorite(this.product().id));
 
-  open() {
+  open(): void {
     this.router.navigate(['/product', this.product().id]);
   }
 
-  add() {
+  add(): void {
     this.cart.add(this.product(), 1);
   }
 
-  toggleFav() {
+  toggleFav(): void {
     this.cart.toggleFavorite(this.product().id);
   }
 }

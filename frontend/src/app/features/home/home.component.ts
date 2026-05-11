@@ -108,5 +108,5 @@ export class HomeComponent {
   readonly popular = PRODUCTS.slice(0, 4);
   readonly selectedCategory = signal<string>('Fruits');
 
-  goProducts() { this.router.navigate(['/products']); }
+  goProducts(): void { this.router.navigate(['/products']); }
 }

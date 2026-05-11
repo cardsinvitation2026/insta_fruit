@@ -127,5 +127,5 @@ export class ProfileComponent {
     { label: 'Help & Support', icon: HelpCircle },
   ];
 
-  logout() { this.router.navigate(['/login']); }
+  logout(): void { this.router.navigate(['/login']); }
 }

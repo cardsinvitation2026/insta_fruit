@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LucideAngularModule, Home, Heart, ShoppingBag, User } from 'lucide-angular';
 import { CartService } from '../core/services/cart.service';
 

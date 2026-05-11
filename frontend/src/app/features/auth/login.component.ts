@@ -91,7 +91,7 @@ export class LoginComponent {
   readonly EyeIcon = Eye;
   readonly EyeOffIcon = EyeOff;
 
-  onSubmit() {
+  onSubmit(): void {
     this.router.navigate(['/home']);
   }
 }

@@ -44,6 +44,6 @@ export class OrderSuccessComponent {
   private readonly router = inject(Router);
   readonly CheckIcon = Check;
   readonly orderId = Math.floor(100000 + Math.random() * 900000);
-  track() { this.router.navigate(['/track-order']); }
-  home() { this.router.navigate(['/home']); }
+  track(): void { this.router.navigate(['/track-order']); }
+  home(): void { this.router.navigate(['/home']); }
 }
