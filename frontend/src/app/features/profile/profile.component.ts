@@ -26,7 +26,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
             </button>
           </div>
           <div class="flex-1 min-w-0">
-            <h2 class="text-[16px] font-extrabold text-text-primary" data-testid="profile-name">Olivia Carter</h2>
+            <h2 class="text-[16px] font-extrabold text-text-primary" data-testid="profile-name">Keshav Shukla</h2>
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
               <lucide-icon [img]="PhoneIcon" [size]="11"></lucide-icon>
               +1 (415) 555-0142

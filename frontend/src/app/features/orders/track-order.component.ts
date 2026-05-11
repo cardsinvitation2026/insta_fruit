@@ -59,7 +59,7 @@ import { OrderStatusStepperComponent } from '../../shared/order-status-stepper.c
         <div data-testid="delivery-agent" class="bg-white rounded-card p-4 shadow-soft flex items-center gap-3">
           <img src="https://i.pravatar.cc/64?img=33" alt="agent" class="w-12 h-12 rounded-full object-cover" />
           <div class="flex-1">
-            <p class="text-[14px] font-bold text-text-primary">Marcus Rivera</p>
+            <p class="text-[14px] font-bold text-text-primary">Hemant Kumar</p>
             <p class="text-[11px] text-text-secondary">Your delivery partner</p>
           </div>
           <button class="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center">
