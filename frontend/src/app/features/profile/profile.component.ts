@@ -29,11 +29,11 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
             <h2 class="text-[16px] font-extrabold text-text-primary" data-testid="profile-name">Keshav Shukla</h2>
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
               <lucide-icon [img]="PhoneIcon" [size]="11"></lucide-icon>
-              +1 (415) 555-0142
+              +91 9826000000
             </p>
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
               <lucide-icon [img]="MapIcon" [size]="11"></lucide-icon>
-              San Francisco, CA
+              Avanti Vihar, Raipur, Chhattisgarh
             </p>
           </div>
         </div>

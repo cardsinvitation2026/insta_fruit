@@ -28,7 +28,7 @@ import { CartService } from '../../core/services/cart.service';
             </div>
             <div class="flex-1">
               <p class="text-[13px] font-bold text-text-primary">Home</p>
-              <p class="text-[12px] text-text-secondary leading-relaxed mt-0.5">1234 Market Street, Suite 200<br/>San Francisco, CA 94103</p>
+              <p class="text-[12px] text-text-secondary leading-relaxed mt-0.5">Avanti Vihar, Raipur, Chhattisgarh 492001</p>
             </div>
             <button class="text-primary"><lucide-icon [img]="PencilIcon" [size]="16"></lucide-icon></button>
           </div>

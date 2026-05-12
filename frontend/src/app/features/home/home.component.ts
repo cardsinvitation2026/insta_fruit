@@ -32,7 +32,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
               <span>Deliver to</span>
             </div>
             <button class="flex items-center gap-1 text-white text-[15px] font-bold">
-              San Francisco, CA
+              Avanti Vihar, Raipur, Chhattisgarh
               <lucide-icon [img]="ChevronIcon" [size]="16"></lucide-icon>
             </button>
           </div>
