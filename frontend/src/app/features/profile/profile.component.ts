@@ -33,7 +33,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
             </p>
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
               <lucide-icon [img]="MapIcon" [size]="11"></lucide-icon>
-              Avanti Vihar, Raipur, Chhattisgarh
+              Avanti Vihar, Raipur, Chhattisgarh 492001
             </p>
           </div>
         </div>

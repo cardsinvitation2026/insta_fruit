@@ -32,7 +32,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
               <span>Deliver to</span>
             </div>
             <button class="flex items-center gap-1 text-white text-[15px] font-bold">
-              Avanti Vihar, Raipur, Chhattisgarh
+              Avanti Vihar, Raipur, Chhattisgarh 492001
               <lucide-icon [img]="ChevronIcon" [size]="16"></lucide-icon>
             </button>
           </div>
@@ -41,7 +41,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
             <span class="absolute top-2.5 right-3 w-2 h-2 rounded-full bg-red-400"></span>
           </button>
         </div>
-        <h1 class="text-2xl font-extrabold leading-tight">Hello, Olivia 👋</h1>
+        <h1 class="text-2xl font-extrabold leading-tight">Hello, Keshav 👋</h1>
         <p class="text-white/85 text-[13px] mt-1">What fresh fruits today?</p>
       </div>
 
