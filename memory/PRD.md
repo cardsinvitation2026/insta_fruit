@@ -1,60 +1,90 @@
 # InstaFruit — PRD
 
-## Original Problem Statement
-Build a pixel-perfect frontend-only Angular application named **InstaFruit** — a premium fruit delivery SaaS prototype. Mobile-first (375–430px shell), centered mobile container on desktop, TailwindCSS only, Lucide icons, Angular Signals state, mock JSON data, no backend.
+## Vision
+Pixel-perfect Angular + Firebase enterprise SaaS for premium fruit delivery. Customer mobile app + full Admin Panel. Production architecture, scalable, secure, real-time, PWA-enabled.
 
 ## Tech Stack
-- **Framework**: Angular 21 (latest), standalone components, lazy-loaded routes
-- **Styling**: TailwindCSS 3 + Poppins font
-- **Icons**: lucide-angular
-- **State**: Angular Signals (CartService)
-- **Routing**: Angular Router with `withInMemoryScrolling`
-- **Animations**: Angular animations + Tailwind keyframes
+- **Angular 21** standalone components, lazy routes, Signals + RxJS
+- **TailwindCSS 3** + Poppins
+- **@angular/fire** + Firebase 11 (Auth, Firestore, Storage, Functions, Analytics)
+- **Cloud Functions** (Node 20, TypeScript) for Razorpay verify/refund, order notifications, daily analytics aggregation
+- **Razorpay** payment gateway (Cloud Functions verify HMAC signature)
+- **@angular/service-worker** for PWA
+- **Firebase Hosting** target
 
-## Branding
-- Primary `#08B44D`, Primary Dark `#00963F`, Light Bg `#EAF7EC`
-- Card radius 22px, button/input radius 18px
-- Mobile-first shell `max-width: 430px`, soft shadow on desktop
-
-## Implemented (May 11, 2026)
-- ✅ Splash screen (2s auto-redirect to /login)
-- ✅ Login & Signup (Google mock, navigates to /home)
-- ✅ Home (green header, search bar, promo banner, categories chips, popular products grid)
-- ✅ Products listing (sticky header, category tabs, 2-col grid)
-- ✅ Product details (image hero, qty selector, description, related products, fixed bottom CTA)
-- ✅ Cart (qty controls, remove, subtotal/delivery/total, sticky checkout button)
-- ✅ Checkout (address card, Cash on Delivery & Razorpay options, price summary, place order)
-- ✅ Order Success (animated check, order ID, track CTA)
-- ✅ Track Order (map-style background, ETA card, delivery agent card, animated 5-step status stepper)
-- ✅ Profile (avatar, stats, order history, menu items, logout)
-- ✅ Favorites (wishlist view from CartService.favorites)
-- ✅ Bottom navbar (Home / Favorite / Cart / Profile) with cart badge
-- ✅ Reusable components: product-card, search-bar, promo-banner, quantity-selector, order-status-stepper, bottom-navbar
-
-## Core Requirements (static)
-- Pixel-perfect grocery app feel — soft shadows, rounded 22px cards, premium green palette
-- Mobile-first centered shell on desktop
-- All buttons interactive, full E2E flow works (home → product → cart → checkout → success → track)
-- No backend; static mock data
-
-## Architecture
+## Folder Structure (enterprise feature-first)
 ```
 src/app/
-  core/data/mock-data.ts        # products & categories
-  core/services/cart.service.ts # signals: items, favorites, totals
-  shared/                       # reusable UI components
-  features/{splash,auth,home,products,cart,checkout,orders,profile,favorites}
+  core/
+    models/          — typed domain models (User, Product, Order, Payment, Refund, Banner, Cart, Category)
+    services/        — auth, products, categories, banners, cart, orders, users, storage, payments, refunds, razorpay, analytics
+    guards/          — authGuard, adminGuard, noAuthGuard
+  shared/            — product-card, bottom-navbar, search-bar, promo-banner, quantity-selector, order-status-stepper
+  features/
+    auth/            — login, signup, otp (phone)
+    splash/          — auth-aware splash
+    home/            — banners + categories + products from Firestore
+    products/        — list + details (realtime)
+    cart/            — Firestore-persisted cart
+    checkout/        — COD + Razorpay flow
+    orders/          — order-success, track-order (realtime listener)
+    profile/         — Firestore profile + order history + admin entry point
+    favorites/
+    admin/
+      admin-layout   — desktop sidebar + mobile tab
+      dashboard      — KPIs, recent orders, seed button
+      products-admin — CRUD + image upload
+      categories-admin — CRUD + image upload
+      banners-admin  — CRUD + image upload + toggle
+      orders-admin   — list + status update + cancel
+      users-admin    — list + block + role
+      refunds-admin  — list + approve (calls processRefund function) + reject
+
+functions/
+  src/index.ts       — createRazorpayOrder, verifyRazorpayPayment, processRefund,
+                       onOrderStatusChange, onImageUpload, aggregateAnalytics (scheduled)
+
+firestore.rules      — strict role-based (customer/admin)
+firestore.indexes.json — products/orders/refunds query indexes
+storage.rules        — admin-only writes for catalog, owner-only for avatars
+firebase.json        — hosting + functions + emulators
+ngsw-config.json     — PWA caching strategy
+manifest.webmanifest — PWA install manifest
 ```
 
-## P1/P2 Backlog
-- P1: Search filter logic on products page
-- P1: Persist cart to localStorage
-- P1: Real Razorpay integration (currently mock-only)
-- P2: Skeleton loaders, page transitions
-- P2: i18n / multi-currency
-- P2: Hook backend (FastAPI/Mongo) for products & orders
+## Implemented (May 12, 2026)
+- ✅ UI preserved pixel-perfect (no design changes) — verified via screenshot
+- ✅ All 11 customer pages wired to Firestore via services
+- ✅ Firebase Auth: email/password signup+login+reset, **Phone OTP** with reCAPTCHA
+- ✅ Auth-aware routing with `authGuard` / `adminGuard` / `noAuthGuard`
+- ✅ Firestore CRUD services for users, products, categories, banners, cart, orders, payments, refunds
+- ✅ Firestore-persisted cart with Signals + reactive sync via effect()
+- ✅ Realtime order tracking (Firestore listener → stepper progresses with `orderStatus` field)
+- ✅ Razorpay flow: createOrder (CF) → checkout.js → verify (CF HMAC) → orders/payments updated
+- ✅ Admin Panel — 7 modules, all wired to Firestore CRUD + Storage image upload
+- ✅ Cloud Functions code complete (Razorpay order/verify/refund, order trigger, storage trigger, daily analytics)
+- ✅ Strict Firestore + Storage security rules (role-based)
+- ✅ Composite indexes for product/order/refund queries
+- ✅ PWA: `manifest.webmanifest` + `ngsw-config.json` + service worker registered in prod
+- ✅ Analytics events (purchase, screen tracking, user tracking)
+- ✅ Strict typing, no `any`, models in `core/models`, Smart/Dumb pattern
 
-## Next Tasks
-- Hook real backend for catalog & checkout
-- Add product search & category filter logic
-- Persistent auth state and protected routes
+## What works without Firebase keys
+- App loads, splash → login UI renders correctly (verified via Playwright screenshot)
+- All routes resolve
+
+## What requires keys (instructions in `/app/SETUP.md`)
+- Auth (signup/login/OTP) — needs Firebase Auth enabled + real Firebase config
+- Catalog/cart/orders persistence — needs Firestore enabled
+- Image uploads from admin — needs Storage enabled
+- Razorpay checkout — needs Razorpay keys + Cloud Functions deployed (`firebase deploy --only functions`)
+- Real refunds — needs same as above
+
+## P1/P2 Backlog
+- P1: Search bar on /products wired to `ProductsService.search()` (UI exists, query exists)
+- P1: Address book CRUD (UI shows single default address)
+- P1: Cancel order from `/profile` order history
+- P2: Push notifications (FCM) via `onOrderStatusChange` trigger
+- P2: Admin sales charts (analytics aggregate already running)
+- P2: SSR (Angular Universal) — recommended deferred until Firebase Hosting deploy
+- P2: i18n + multi-currency

@@ -1,8 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Heart } from 'lucide-angular';
-import { PRODUCTS } from '../../core/data/mock-data';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CartService } from '../../core/services/cart.service';
+import { ProductsService } from '../../core/services/products.service';
 import { ProductCardComponent } from '../../shared/product-card.component';
 import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 
@@ -39,6 +40,8 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 })
 export class FavoritesComponent {
   private readonly cart = inject(CartService);
+  private readonly productsSvc = inject(ProductsService);
   readonly HeartIcon = Heart;
-  readonly favorites = computed(() => PRODUCTS.filter((p) => this.cart.favorites().includes(p.id)));
+  private readonly all = toSignal(this.productsSvc.list(), { initialValue: [] });
+  readonly favorites = computed(() => this.all().filter((p) => this.cart.favorites().includes(p.id)));
 }

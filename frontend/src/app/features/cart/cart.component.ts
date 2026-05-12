@@ -30,26 +30,26 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
         </div>
       } @else {
         <div class="px-5 pt-5 space-y-3">
-          @for (i of items(); track i.product.id) {
-            <div [attr.data-testid]="'cart-item-' + i.product.id" class="bg-white rounded-card p-3 shadow-soft flex items-center gap-3">
+          @for (i of items(); track i.productId) {
+            <div [attr.data-testid]="'cart-item-' + i.productId" class="bg-white rounded-card p-3 shadow-soft flex items-center gap-3">
               <div class="w-20 h-20 rounded-2xl bg-primary-light flex items-center justify-center flex-shrink-0">
-                <img [src]="i.product.image" [alt]="i.product.name" class="w-16 h-16 object-contain" />
+                <img [src]="i.thumbnail" [alt]="i.name" class="w-16 h-16 object-contain" />
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="text-[14px] font-bold text-text-primary truncate">{{ i.product.name }}</h3>
-                <p class="text-[11px] text-text-secondary">{{ i.product.unit }}</p>
-                <p class="text-[15px] font-extrabold text-primary mt-1">₹{{ (i.product.price * i.quantity).toFixed(2) }}</p>
+                <h3 class="text-[14px] font-bold text-text-primary truncate">{{ i.name }}</h3>
+                <p class="text-[11px] text-text-secondary">{{ i.unit }}</p>
+                <p class="text-[15px] font-extrabold text-primary mt-1">₹{{ (i.price * i.quantity).toFixed(2) }}</p>
               </div>
               <div class="flex flex-col items-end gap-2">
-                <button [attr.data-testid]="'remove-' + i.product.id" (click)="remove(i.product.id)" class="text-text-secondary">
+                <button [attr.data-testid]="'remove-' + i.productId" (click)="remove(i.productId)" class="text-text-secondary">
                   <lucide-icon [img]="TrashIcon" [size]="16"></lucide-icon>
                 </button>
                 <div class="flex items-center gap-2 bg-primary-light rounded-full px-1 py-1">
-                  <button [attr.data-testid]="'dec-' + i.product.id" (click)="dec(i.product.id)" class="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                  <button [attr.data-testid]="'dec-' + i.productId" (click)="dec(i.productId)" class="w-6 h-6 rounded-full bg-white flex items-center justify-center">
                     <lucide-icon [img]="MinusIcon" [size]="12" class="text-primary"></lucide-icon>
                   </button>
                   <span class="text-[12px] font-bold w-4 text-center">{{ i.quantity }}</span>
-                  <button [attr.data-testid]="'inc-' + i.product.id" (click)="inc(i.product.id)" class="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                  <button [attr.data-testid]="'inc-' + i.productId" (click)="inc(i.productId)" class="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                     <lucide-icon [img]="PlusIcon" [size]="12" class="text-white"></lucide-icon>
                   </button>
                 </div>
@@ -58,7 +58,6 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
           }
         </div>
 
-        <!-- Summary -->
         <div class="px-5 mt-6">
           <div class="bg-white rounded-card p-4 shadow-soft space-y-2">
             <div class="flex justify-between text-[13px]"><span class="text-text-secondary">Subtotal</span><span class="font-semibold" data-testid="cart-subtotal">₹{{ subtotal().toFixed(2) }}</span></div>
@@ -68,13 +67,9 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
           </div>
         </div>
 
-        <!-- Checkout button -->
         <div class="fixed bottom-[75px] left-1/2 -translate-x-1/2 w-full max-w-app bg-white border-t border-border-soft px-5 py-3 z-30">
-          <button
-            data-testid="checkout-btn"
-            (click)="checkout()"
-            class="w-full h-14 bg-primary text-white rounded-btn text-[15px] font-bold shadow-green active:scale-[0.98]"
-          >Proceed to Checkout</button>
+          <button data-testid="checkout-btn" (click)="checkout()"
+                  class="w-full h-14 bg-primary text-white rounded-btn text-[15px] font-bold shadow-green active:scale-[0.98]">Proceed to Checkout</button>
         </div>
       }
 
@@ -90,15 +85,12 @@ export class CartComponent {
   readonly subtotal = this.cart.subtotal;
   readonly deliveryFee = this.cart.deliveryFee;
   readonly total = this.cart.total;
-  readonly ChevronIcon = ChevronLeft;
-  readonly TrashIcon = Trash2;
-  readonly PlusIcon = Plus;
-  readonly MinusIcon = Minus;
-  readonly BagIcon = ShoppingBag;
+  readonly ChevronIcon = ChevronLeft; readonly TrashIcon = Trash2;
+  readonly PlusIcon = Plus; readonly MinusIcon = Minus; readonly BagIcon = ShoppingBag;
 
-  inc(id: number): void { this.cart.increment(id); }
-  dec(id: number): void { this.cart.decrement(id); }
-  remove(id: number): void { this.cart.remove(id); }
+  inc(id: string): void { this.cart.increment(id); }
+  dec(id: string): void { this.cart.decrement(id); }
+  remove(id: string): void { this.cart.remove(id); }
   checkout(): void { this.router.navigate(['/checkout']); }
   goShop(): void { this.router.navigate(['/products']); }
   back(): void { this.location.back(); }

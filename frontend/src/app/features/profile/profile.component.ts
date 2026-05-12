@@ -1,7 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Phone, MapPin, ShoppingBag, Heart, CreditCard, Bell, HelpCircle, LogOut, ChevronRight, Pencil } from 'lucide-angular';
+import { LucideAngularModule, Phone, MapPin, ShoppingBag, Heart, CreditCard, Bell, HelpCircle, LogOut, ChevronRight, Pencil, ShieldCheck } from 'lucide-angular';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AuthService } from '../../core/services/auth.service';
+import { OrdersService } from '../../core/services/orders.service';
 import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 
 @Component({
@@ -10,44 +13,40 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
   imports: [CommonModule, LucideAngularModule, BottomNavbarComponent],
   template: `
     <div data-testid="profile-page" class="min-h-screen bg-[#FAFAFA] pb-28">
-      <!-- header -->
-      <div class="px-5 pt-12 pb-12 text-white relative overflow-hidden" style="background:#08B44D; border-bottom-left-radius:32px; border-bottom-right-radius:32px;">
+      <div class="px-5 pt-12 pb-12 text-white relative overflow-hidden"
+           style="background:#08B44D; border-bottom-left-radius:32px; border-bottom-right-radius:32px;">
         <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10"></div>
         <h1 class="text-[18px] font-extrabold relative">My Profile</h1>
       </div>
 
-      <!-- profile card -->
       <div class="px-5 -mt-8 relative z-10">
         <div class="bg-white rounded-card p-4 shadow-soft-lg flex items-center gap-4">
           <div class="relative">
-            <img src="https://i.pravatar.cc/100?img=47" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-soft" alt="avatar" />
+            <img [src]="profileImage()" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-soft" alt="avatar" />
             <button class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary border-2 border-white flex items-center justify-center">
               <lucide-icon [img]="PencilIcon" [size]="10" class="text-white"></lucide-icon>
             </button>
           </div>
           <div class="flex-1 min-w-0">
-            <h2 class="text-[16px] font-extrabold text-text-primary" data-testid="profile-name">Olivia Carter</h2>
+            <h2 class="text-[16px] font-extrabold text-text-primary" data-testid="profile-name">{{ profile()?.fullName || 'Welcome' }}</h2>
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
-              <lucide-icon [img]="PhoneIcon" [size]="11"></lucide-icon>
-              +1 (415) 555-0142
+              <lucide-icon [img]="PhoneIcon" [size]="11"></lucide-icon>{{ profile()?.phone || '—' }}
             </p>
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
-              <lucide-icon [img]="MapIcon" [size]="11"></lucide-icon>
-              San Francisco, CA
+              <lucide-icon [img]="MapIcon" [size]="11"></lucide-icon>{{ profile()?.email }}
             </p>
           </div>
         </div>
       </div>
 
-      <!-- stats -->
       <div class="px-5 mt-5 grid grid-cols-3 gap-3">
         <div class="bg-white rounded-card p-3 text-center shadow-soft">
-          <p class="text-[18px] font-extrabold text-primary">24</p>
+          <p class="text-[18px] font-extrabold text-primary">{{ orders().length }}</p>
           <p class="text-[11px] text-text-secondary mt-0.5">Orders</p>
         </div>
         <div class="bg-white rounded-card p-3 text-center shadow-soft">
-          <p class="text-[18px] font-extrabold text-primary">12</p>
-          <p class="text-[11px] text-text-secondary mt-0.5">Wishlist</p>
+          <p class="text-[18px] font-extrabold text-primary">{{ deliveredCount() }}</p>
+          <p class="text-[11px] text-text-secondary mt-0.5">Delivered</p>
         </div>
         <div class="bg-white rounded-card p-3 text-center shadow-soft">
           <p class="text-[18px] font-extrabold text-primary">4.9</p>
@@ -55,31 +54,41 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
         </div>
       </div>
 
-      <!-- order history -->
       <div class="px-5 mt-7">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-[14px] font-bold text-text-primary">Order History</h3>
           <a class="text-[12px] text-primary font-semibold">View all</a>
         </div>
         <div class="space-y-3">
-          @for (o of orders; track o.id) {
-            <div [attr.data-testid]="'order-' + o.id" class="bg-white rounded-card p-3 shadow-soft flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-xl">{{ o.icon }}</div>
+          @for (o of orders().slice(0,3); track o.orderId) {
+            <div [attr.data-testid]="'order-' + o.orderId" class="bg-white rounded-card p-3 shadow-soft flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-xl">🍊</div>
               <div class="flex-1">
-                <p class="text-[13px] font-bold text-text-primary">{{ o.title }}</p>
-                <p class="text-[11px] text-text-secondary">{{ o.date }} • {{ o.items }} items</p>
+                <p class="text-[13px] font-bold text-text-primary">Order #{{ o.orderId.slice(-8).toUpperCase() }}</p>
+                <p class="text-[11px] text-text-secondary">{{ o.products.length }} items</p>
               </div>
               <div class="text-right">
-                <p class="text-[13px] font-extrabold text-primary">₹{{ o.total }}</p>
-                <span class="text-[10px] bg-primary-light text-primary px-2 py-0.5 rounded-full font-semibold">{{ o.status }}</span>
+                <p class="text-[13px] font-extrabold text-primary">₹{{ o.total.toFixed(2) }}</p>
+                <span class="text-[10px] bg-primary-light text-primary px-2 py-0.5 rounded-full font-semibold">{{ o.orderStatus }}</span>
               </div>
             </div>
+          } @empty {
+            <p class="text-[12px] text-text-secondary text-center py-4">No orders yet.</p>
           }
         </div>
       </div>
 
-      <!-- menu -->
       <div class="px-5 mt-7 space-y-2">
+        @if (isAdmin()) {
+          <button (click)="goAdmin()" data-testid="goto-admin"
+                  class="w-full bg-white rounded-card p-3.5 shadow-soft flex items-center gap-3 ring-1 ring-primary/30">
+            <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+              <lucide-icon [img]="AdminIcon" [size]="16" class="text-white"></lucide-icon>
+            </div>
+            <span class="flex-1 text-left text-[13px] font-semibold text-text-primary">Admin Panel</span>
+            <lucide-icon [img]="ChevronIcon" [size]="16" class="text-text-secondary"></lucide-icon>
+          </button>
+        }
         @for (m of menu; track m.label) {
           <button class="w-full bg-white rounded-card p-3.5 shadow-soft flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-primary-light flex items-center justify-center">
@@ -91,7 +100,6 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
         }
       </div>
 
-      <!-- logout -->
       <div class="px-5 mt-5">
         <button data-testid="logout-btn" (click)="logout()" class="w-full bg-white rounded-card p-3.5 shadow-soft flex items-center gap-3 text-red-500">
           <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
@@ -106,18 +114,21 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
   `,
 })
 export class ProfileComponent {
+  private readonly auth = inject(AuthService);
+  private readonly ordersSvc = inject(OrdersService);
   private readonly router = inject(Router);
-  readonly PhoneIcon = Phone;
-  readonly MapIcon = MapPin;
-  readonly PencilIcon = Pencil;
-  readonly ChevronIcon = ChevronRight;
-  readonly LogoutIcon = LogOut;
 
-  readonly orders = [
-    { id: 1, icon: '🍊', title: 'Order #IF483920', date: 'Feb 12, 2026', items: 4, total: '24.50', status: 'Delivered' },
-    { id: 2, icon: '🥭', title: 'Order #IF483851', date: 'Feb 08, 2026', items: 2, total: '12.99', status: 'Delivered' },
-    { id: 3, icon: '🫐', title: 'Order #IF483712', date: 'Feb 03, 2026', items: 6, total: '38.20', status: 'Delivered' },
-  ];
+  readonly profile = this.auth.profile;
+  readonly isAdmin = this.auth.isAdmin;
+  readonly orders = toSignal(
+    this.ordersSvc.myOrders(this.auth.user()?.uid ?? '_'),
+    { initialValue: [] }
+  );
+  readonly deliveredCount = computed(() => this.orders().filter((o) => o.orderStatus === 'delivered').length);
+  readonly profileImage = computed(() => this.profile()?.profileImage ?? 'https://i.pravatar.cc/100?img=47');
+
+  readonly PhoneIcon = Phone; readonly MapIcon = MapPin; readonly PencilIcon = Pencil;
+  readonly ChevronIcon = ChevronRight; readonly LogoutIcon = LogOut; readonly AdminIcon = ShieldCheck;
 
   readonly menu = [
     { label: 'My Orders', icon: ShoppingBag },
@@ -127,5 +138,6 @@ export class ProfileComponent {
     { label: 'Help & Support', icon: HelpCircle },
   ];
 
-  logout(): void { this.router.navigate(['/login']); }
+  async logout(): Promise<void> { await this.auth.signOutUser(); }
+  goAdmin(): void { this.router.navigate(['/admin/dashboard']); }
 }

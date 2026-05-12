@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Check } from 'lucide-angular';
 
 @Component({
@@ -23,27 +23,23 @@ import { LucideAngularModule, Check } from 'lucide-angular';
 
         <div class="bg-white rounded-card shadow-soft p-4 mt-8 w-full max-w-[320px]">
           <p class="text-[11px] text-text-secondary">Order ID</p>
-          <p class="text-[15px] font-bold text-text-primary mt-0.5">#IF{{ orderId }}</p>
+          <p class="text-[15px] font-bold text-text-primary mt-0.5">#{{ shortId() }}</p>
         </div>
 
-        <button
-          data-testid="track-order-btn"
-          (click)="track()"
-          class="mt-8 w-full max-w-[320px] h-14 bg-primary text-white rounded-btn text-[15px] font-bold shadow-green active:scale-[0.98]"
-        >Track Your Order</button>
-        <button
-          data-testid="go-home-btn"
-          (click)="home()"
-          class="mt-3 w-full max-w-[320px] h-14 bg-white text-primary border border-primary/30 rounded-btn text-[15px] font-bold"
-        >Back to Home</button>
+        <button data-testid="track-order-btn" (click)="track()"
+                class="mt-8 w-full max-w-[320px] h-14 bg-primary text-white rounded-btn text-[15px] font-bold shadow-green active:scale-[0.98]">Track Your Order</button>
+        <button data-testid="go-home-btn" (click)="home()"
+                class="mt-3 w-full max-w-[320px] h-14 bg-white text-primary border border-primary/30 rounded-btn text-[15px] font-bold">Back to Home</button>
       </div>
     </div>
   `,
 })
 export class OrderSuccessComponent {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   readonly CheckIcon = Check;
-  readonly orderId = Math.floor(100000 + Math.random() * 900000);
-  track(): void { this.router.navigate(['/track-order']); }
+  readonly orderId = this.route.snapshot.paramMap.get('id') ?? '';
+  shortId(): string { return this.orderId.slice(-8).toUpperCase(); }
+  track(): void { this.router.navigate(['/track-order', this.orderId]); }
   home(): void { this.router.navigate(['/home']); }
 }
