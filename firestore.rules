@@ -1,0 +1,90 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users: each user reads/writes own doc; admin reads all; admin can update role/block.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'customer'
+        && request.resource.data.uid == userId;
+      allow update: if (isOwner(userId)
+                        && request.resource.data.role == resource.data.role
+                        && request.resource.data.isBlocked == resource.data.isBlocked)
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Categories: public read; admin write.
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Products: public read; admin write.
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Banners: public read; admin write.
+    match /banners/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Cart: owner-only.
+    match /cart/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Orders: owner reads own; admin reads all; create requires owner; admin updates status.
+    match /orders/{orderId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.orderStatus == 'placed';
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      // user can only cancel own placed order; admin can update anything.
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.userId == request.auth.uid
+            && request.resource.data.orderStatus == 'cancelled'
+            && resource.data.orderStatus in ['placed', 'preparing']);
+      allow delete: if isAdmin();
+    }
+
+    // Payments: created only by Cloud Functions (admin SDK bypasses rules). Reads: owner or admin.
+    match /payments/{paymentId} {
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // Refunds: customer creates; admin approves/rejects; both read their own.
+    match /refunds/{refundId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Analytics aggregates: admin-only read; written by Cloud Functions.
+    match /analytics/{doc} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}

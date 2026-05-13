@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+      return isSignedIn() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isImage()  { return request.resource.contentType.matches('image/.*'); }
+    function under5MB() { return request.resource.size < 5 * 1024 * 1024; }
+
+    // Public read for product/category/banner images, admin write.
+    match /products/{file=**}   { allow read: if true; allow write: if isAdmin() && isImage() && under5MB(); }
+    match /categories/{file=**} { allow read: if true; allow write: if isAdmin() && isImage() && under5MB(); }
+    match /banners/{file=**}    { allow read: if true; allow write: if isAdmin() && isImage() && under5MB(); }
+
+    // User avatars: signed-in users upload own.
+    match /users/{uid}/{file=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == uid && isImage() && under5MB();
+    }
+  }
+}
