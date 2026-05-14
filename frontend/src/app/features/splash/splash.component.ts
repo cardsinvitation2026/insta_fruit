@@ -38,10 +38,11 @@ import { filter, firstValueFrom, take } from 'rxjs';
 export class SplashComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  /** Created at field init time so `toObservable` runs inside the injection context (NG0203). */
+  private readonly loading$ = toObservable(this.auth.loading);
 
   async ngOnInit(): Promise<void> {
-    const loading$ = toObservable(this.auth.loading);
-    await firstValueFrom(loading$.pipe(filter((l) => !l), take(1)));
+    await firstValueFrom(this.loading$.pipe(filter((l) => !l), take(1)));
     setTimeout(() => {
       if (this.auth.isLoggedIn()) {
         this.router.navigate([this.auth.isAdmin() ? '/admin/dashboard' : '/home']);
