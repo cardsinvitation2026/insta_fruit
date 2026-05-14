@@ -2,13 +2,13 @@ export const environment = {
   production: false,
   // TODO: Replace these placeholders with your Firebase web config (Firebase Console → Project settings → Your apps → SDK setup)
   firebase: {
-    apiKey: 'REPLACE_API_KEY',
-    authDomain: 'REPLACE_PROJECT.firebaseapp.com',
-    projectId: 'REPLACE_PROJECT_ID',
-    storageBucket: 'REPLACE_PROJECT.appspot.com',
-    messagingSenderId: 'REPLACE_SENDER_ID',
-    appId: 'REPLACE_APP_ID',
-    measurementId: 'REPLACE_MEASUREMENT_ID',
+    apiKey: "AIzaSyDziBrk5HCpi4CarfqshoOJ8ZmpTBPuTr8",
+    authDomain: "instafruit99-13755.firebaseapp.com",
+    projectId: "instafruit99-13755",
+    storageBucket: "instafruit99-13755.firebasestorage.app",
+    messagingSenderId: "706736900017",
+    appId: "1:706736900017:web:a3d09d102d650a922a5f90",
+    measurementId: "G-PY5G388NYE"
   },
   // Razorpay public Key ID (frontend). Secret stays in Cloud Functions config.
   razorpayKeyId: 'rzp_test_REPLACE_KEY_ID',
