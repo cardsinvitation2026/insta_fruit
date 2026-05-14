@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Auth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
   sendPasswordResetEmail, onAuthStateChanged, User } from '@angular/fire/auth';
-import { Firestore, doc, docData, setDoc, updateDoc, serverTimestamp } from '@angular/fire/firestore';
+import { Firestore, doc, docData, setDoc, updateDoc, serverTimestamp, getDoc } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { AppUser } from '../models';
@@ -21,7 +21,7 @@ export class AuthService {
   readonly profile = this._profile.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly isLoggedIn = computed(() => this._user() !== null);
-  readonly isAdmin = computed(() => this._profile()?.role === 'admin');
+  readonly isAdmin = signal(false);
 
   private confirmationResult: ConfirmationResult | null = null;
 
@@ -33,21 +33,51 @@ export class AuthService {
     });
   }
 
-  private loadProfile(uid: string): void {
-    const ref = doc(this.db, `users/${uid}`);
-    docData(ref).subscribe({
-      next: (data) => { this._profile.set((data as AppUser) ?? null); this._loading.set(false); },
-      error: () => { this._loading.set(false); },
-    });
+  private async loadProfile(uid: string): Promise<void> {
+    try {
+      const ref = doc(this.db, `users/${uid}`);
+      const snapshot = await getDoc(ref);
+  
+      if (snapshot.exists()) {
+        this._profile.set(snapshot.data() as AppUser);
+        this.isAdmin.set((snapshot.data() as AppUser)?.role === 'admin');
+      } else {
+        this._profile.set(null);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      this._loading.set(false);
+    }
   }
-
   profile$(): Observable<AppUser | null> {
-    return new Observable<User | null>((sub) => {
-      const unsub = onAuthStateChanged(this.auth, (u) => sub.next(u));
+    return new Observable<AppUser | null>((subscriber) => {
+  
+      const unsub = onAuthStateChanged(this.auth, async (u) => {
+  
+        if (!u) {
+          subscriber.next(null);
+          return;
+        }
+  
+        try {
+          const snapshot = await getDoc(doc(this.db, `users/${u.uid}`));
+  
+          if (snapshot.exists()) {
+            subscriber.next(snapshot.data() as AppUser);
+          } else {
+            subscriber.next(null);
+          }
+  
+        } catch (e) {
+          console.log(e);
+          subscriber.next(null);
+        }
+  
+      });
+  
       return () => unsub();
-    }).pipe(
-      switchMap((u) => u ? docData(doc(this.db, `users/${u.uid}`)) as Observable<AppUser> : of(null))
-    );
+    });
   }
 
   async signUp(fullName: string, email: string, password: string, phone = ''): Promise<void> {
