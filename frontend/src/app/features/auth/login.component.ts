@@ -38,6 +38,10 @@ import { AuthService } from '../../core/services/auth.service';
             </button>
           </div>
 
+          <button type="button" (click)="loginWithGoogle()">
+              Continue with Google 
+          </button>
+
           <div class="text-right">
             <a data-testid="forgot-password" (click)="forgot()" class="text-[12px] text-primary font-semibold cursor-pointer">Forgot password?</a>
           </div>
@@ -85,6 +89,8 @@ export class LoginComponent {
   readonly MailIcon = Mail; readonly LockIcon = Lock; readonly EyeIcon = Eye; readonly EyeOffIcon = EyeOff;
   readonly AlertIcon = AlertCircle;
 
+  readonly authService = inject(AuthService);
+
   async onSubmit(): Promise<void> {
     if (!this.email || !this.password) { this.error.set('Email and password are required'); return; }
     this.loading.set(true); this.error.set('');
@@ -117,5 +123,13 @@ export class LoginComponent {
     if (code.includes('too-many-requests')) return 'Too many attempts. Try again later';
     if (code.includes('network-request-failed')) return 'Network error — check connection';
     return (e as Error)?.message ?? 'Login failed';
+  }
+
+  async loginWithGoogle() {
+    try {
+      await this.authService.signInWithGoogle();
+    } catch (e) {
+      console.log(e);
+    }
   }
 }

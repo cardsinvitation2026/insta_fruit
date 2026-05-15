@@ -1,8 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Auth, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
-  sendPasswordResetEmail, onAuthStateChanged, User } from '@angular/fire/auth';
-import { Firestore, doc, docData, setDoc, updateDoc, serverTimestamp, getDoc } from '@angular/fire/firestore';
+  sendPasswordResetEmail, onAuthStateChanged, User,  GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
+import { Firestore, doc, setDoc, updateDoc, serverTimestamp, getDoc } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { AppUser } from '../models';
@@ -137,5 +137,29 @@ export class AuthService {
 
   async updateProfile(uid: string, patch: Partial<AppUser>): Promise<void> {
     await updateDoc(doc(this.db, `users/${uid}`), { ...patch, updatedAt: serverTimestamp() });
+  }
+
+  async signInWithGoogle(): Promise<void> {
+
+    const provider = new GoogleAuthProvider();
+  
+    const cred = await signInWithPopup(this.auth, provider);
+  
+    const user = cred.user;
+  
+    const userRef = doc(this.db, `users/${user.uid}`);
+  
+    await setDoc(userRef, {
+      uid: user.uid,
+      fullName: user.displayName || '',
+      email: user.email || '',
+      phone: user.phoneNumber || '',
+      profileImageUrl: user.photoURL || '',
+      role: 'customer',
+      isPhoneVerified: false,
+      authProvider: 'google',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
   }
 }
