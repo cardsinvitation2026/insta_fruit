@@ -7,18 +7,30 @@ import { Product } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
   private readonly db = inject(Firestore);
-  private readonly col = collection(this.db, 'products');
 
   list(): Observable<Product[]> {
-    return collectionData(
-      query(this.col, where('isAvailable', '==', true), orderBy('createdAt', 'desc')),
-      { idField: 'id' }
-    ) as Observable<Product[]>;
+    const productsQuery = query(
+      collection(this.db, 'products')
+    );
+  
+    return collectionData(productsQuery, {
+      idField: 'id'
+    }) as Observable<Product[]>;
+  }
+
+  listAll(): Observable<Product[]> {
+    const productsQuery = query(
+      collection(this.db, 'products')
+    );
+  
+    return collectionData(productsQuery, {
+      idField: 'id'
+    }) as Observable<Product[]>;
   }
 
   byCategory(categoryId: string): Observable<Product[]> {
     return collectionData(
-      query(this.col,
+      query(collection(this.db, 'products'),
         where('isAvailable', '==', true),
         where('categoryId', '==', categoryId),
         orderBy('createdAt', 'desc')),
@@ -28,7 +40,7 @@ export class ProductsService {
 
   search(keyword: string): Observable<Product[]> {
     return collectionData(
-      query(this.col,
+      query(collection(this.db, 'products'),
         where('isAvailable', '==', true),
         where('searchKeywords', 'array-contains', keyword.toLowerCase())),
       { idField: 'id' }
@@ -40,7 +52,7 @@ export class ProductsService {
   }
 
   async create(p: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    const docRef = await addDoc(this.col, {
+    const docRef = await addDoc(collection(this.db, 'products'), {
       ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     });
     return docRef.id;

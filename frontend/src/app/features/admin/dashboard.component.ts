@@ -61,10 +61,10 @@ const SEED_CATEGORIES = [
             <div class="flex items-center justify-between py-2 border-b border-border-soft/60 last:border-0">
               <div>
                 <p class="text-[13px] font-semibold">#{{ o.orderId.slice(-8).toUpperCase() }}</p>
-                <p class="text-[11px] text-text-secondary">{{ o.userName }} • {{ o.products.length }} items</p>
+                <p class="text-[11px] text-text-secondary">{{ o.userName }} • {{ o.products?.length ?? 0 }} items</p>
               </div>
               <div class="text-right">
-                <p class="text-[13px] font-extrabold text-primary">₹{{ o.total.toFixed(0) }}</p>
+                <p class="text-[13px] font-extrabold text-primary">₹{{ (o.total ?? 0).toFixed(0) }}</p>
                 <span class="text-[10px] bg-primary-light text-primary px-2 py-0.5 rounded-full font-semibold">{{ o.orderStatus }}</span>
               </div>
             </div>
@@ -90,7 +90,7 @@ export class AdminDashboardComponent {
   readonly users = toSignal(this.usersSvc.list(), { initialValue: [] });
 
   readonly totalOrders = computed(() => this.orders().length);
-  readonly totalSales = computed(() => this.orders().reduce((s, o) => s + o.total, 0));
+  readonly totalSales = computed(() => this.orders().reduce((s, o) => s + (o.total ?? 0), 0));
   readonly pending = computed(() => this.orders().filter((o) => ['placed', 'preparing', 'packed', 'outForDelivery'].includes(o.orderStatus)).length);
   readonly delivered = computed(() => this.orders().filter((o) => o.orderStatus === 'delivered').length);
 
