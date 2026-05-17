@@ -27,7 +27,7 @@ import { Order, OrderStatus } from '../../core/models';
                     <p class="font-semibold">{{ o.userName }}</p>
                     <p class="text-[11px] text-text-secondary">{{ o.userPhone }}</p>
                   </td>
-                  <td class="px-4 py-3 text-right font-bold">₹{{ (o.total ?? 0).toFixed(0) }}</td>
+                  <td class="px-4 py-3 text-right font-bold">₹{{ (o?.total ?? 0).toFixed(0) }}</td>
                   <td class="px-4 py-3">
                     <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase"
                           [class.bg-primary-light]="o.paymentStatus === 'success'" [class.text-primary]="o.paymentStatus === 'success'"
