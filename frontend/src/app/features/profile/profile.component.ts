@@ -1,10 +1,11 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Phone, MapPin, ShoppingBag, Heart, CreditCard, Bell, HelpCircle, LogOut, ChevronRight, Pencil, ShieldCheck } from 'lucide-angular';
+import { LucideAngularModule, Phone, MapPin, ShoppingBag, Heart, CreditCard, Bell, HelpCircle, LogOut, ChevronRight, Pencil, ShieldCheck, Loader2 } from 'lucide-angular';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { OrdersService } from '../../core/services/orders.service';
+import { StorageService } from '../../core/services/storage.service';
 import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 
 @Component({
@@ -21,14 +22,32 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 
       <div class="px-5 -mt-8 relative z-10">
         <div class="bg-white rounded-card p-4 shadow-soft-lg flex items-center gap-4">
-          <div class="relative">
-            <img [src]="profileImage()" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-soft" alt="avatar" />
-            <button class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary border-2 border-white flex items-center justify-center">
-              <lucide-icon [img]="PencilIcon" [size]="10" class="text-white"></lucide-icon>
+          <div class="relative shrink-0">
+            <img [src]="profileImage()"
+                 class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-soft transition-opacity"
+                 [class.opacity-60]="avatarUploading()"
+                 alt="Profile photo" />
+            <button type="button"
+                    data-testid="change-avatar-btn"
+                    (click)="avatarInput.click()"
+                    [disabled]="avatarUploading()"
+                    [attr.aria-busy]="avatarUploading()"
+                    [attr.aria-label]="avatarUploading() ? 'Uploading photo' : 'Change profile photo'"
+                    class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary border-2 border-white flex items-center justify-center shadow-soft disabled:opacity-50 active:scale-95">
+              @if (avatarUploading()) {
+                <lucide-icon [img]="LoaderIcon" [size]="14" class="text-white animate-spin"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="PencilIcon" [size]="10" class="text-white"></lucide-icon>
+              }
             </button>
+            <input #avatarInput type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only"
+                   (change)="onAvatarSelected($event, avatarInput)" />
           </div>
           <div class="flex-1 min-w-0">
             <h2 class="text-[16px] font-extrabold text-text-primary" data-testid="profile-name">{{ profile()?.fullName || 'Welcome' }}</h2>
+            @if (avatarError()) {
+              <p class="text-[11px] text-red-500 font-semibold mt-1" data-testid="avatar-error">{{ avatarError() }}</p>
+            }
             <p class="text-[12px] text-text-secondary flex items-center gap-1.5 mt-0.5">
               <lucide-icon [img]="PhoneIcon" [size]="11"></lucide-icon>{{ profile()?.phone || '—' }}
             </p>
@@ -116,7 +135,11 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 export class ProfileComponent {
   private readonly auth = inject(AuthService);
   private readonly ordersSvc = inject(OrdersService);
+  private readonly storage = inject(StorageService);
   private readonly router = inject(Router);
+
+  readonly avatarUploading = signal(false);
+  readonly avatarError = signal<string | null>(null);
 
   readonly profile = this.auth.profile;
   readonly isAdmin = this.auth.isAdmin;
@@ -128,6 +151,7 @@ export class ProfileComponent {
   readonly profileImage = computed(() => this.profile()?.profileImage ?? 'https://i.pravatar.cc/100?img=47');
 
   readonly PhoneIcon = Phone; readonly MapIcon = MapPin; readonly PencilIcon = Pencil;
+  readonly LoaderIcon = Loader2;
   readonly ChevronIcon = ChevronRight; readonly LogoutIcon = LogOut; readonly AdminIcon = ShieldCheck;
 
   readonly menu = [
@@ -140,4 +164,28 @@ export class ProfileComponent {
 
   async logout(): Promise<void> { await this.auth.signOutUser(); }
   goAdmin(): void { this.router.navigate(['/admin/dashboard']); }
+
+  async onAvatarSelected(event: Event, input: HTMLInputElement): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    const uid = this.auth.user()?.uid;
+    if (!uid) {
+      this.avatarError.set('You need to be signed in to update your photo.');
+      return;
+    }
+
+    this.avatarError.set(null);
+    this.avatarUploading.set(true);
+    try {
+      const url = await this.storage.upload('users', file);
+      await this.auth.updateProfile(uid, { profileImage: url });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not update photo.';
+      this.avatarError.set(msg);
+    } finally {
+      this.avatarUploading.set(false);
+    }
+  }
 }

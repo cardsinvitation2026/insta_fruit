@@ -14,4 +14,9 @@ export const environment = {
   razorpayKeyId: 'rzp_test_REPLACE_KEY_ID',
   region: 'asia-south1',
   useEmulators: false,
+  /** Unsigned upload preset must allow folders: products, categories, banners, users (Cloudinary dashboard). */
+  cloudinary: {
+    cloudName: 'dnmuwin6h',
+    uploadPreset: 'instafruit_products',
+  },
 };

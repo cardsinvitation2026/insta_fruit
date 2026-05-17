@@ -12,4 +12,8 @@ export const environment = {
   razorpayKeyId: 'rzp_live_REPLACE_KEY_ID',
   region: 'asia-south1',
   useEmulators: false,
+  cloudinary: {
+    cloudName: 'dnmuwin6h',
+    uploadPreset: 'instafruit_products',
+  },
 };

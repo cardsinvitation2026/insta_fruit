@@ -7,6 +7,16 @@ import { Router } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { AppUser } from '../models';
 
+/** Normalize legacy Firestore field `profileImageUrl` (Google sign-in) into `profileImage`. */
+function docToAppUser(raw: Record<string, unknown>): AppUser {
+  const d = raw as unknown as AppUser & { profileImageUrl?: string };
+  const profileImage = d.profileImage ?? d.profileImageUrl;
+  return {
+    ...d,
+    profileImage: profileImage || undefined,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly auth = inject(Auth);
@@ -39,8 +49,8 @@ export class AuthService {
       const snapshot = await getDoc(ref);
   
       if (snapshot.exists()) {
-        this._profile.set(snapshot.data() as AppUser);
-        this.isAdmin.set((snapshot.data() as AppUser)?.role === 'admin');
+        this._profile.set(docToAppUser(snapshot.data() as Record<string, unknown>));
+        this.isAdmin.set((this._profile()?.role) === 'admin');
       } else {
         this._profile.set(null);
       }
@@ -64,7 +74,7 @@ export class AuthService {
           const snapshot = await getDoc(doc(this.db, `users/${u.uid}`));
   
           if (snapshot.exists()) {
-            subscriber.next(snapshot.data() as AppUser);
+            subscriber.next(docToAppUser(snapshot.data() as Record<string, unknown>));
           } else {
             subscriber.next(null);
           }
@@ -136,7 +146,13 @@ export class AuthService {
   }
 
   async updateProfile(uid: string, patch: Partial<AppUser>): Promise<void> {
-    await updateDoc(doc(this.db, `users/${uid}`), { ...patch, updatedAt: serverTimestamp() });
+    const ref = doc(this.db, `users/${uid}`);
+    await updateDoc(ref, { ...patch, updatedAt: serverTimestamp() });
+    const snapshot = await getDoc(ref);
+    if (snapshot.exists()) {
+      this._profile.set(docToAppUser(snapshot.data() as Record<string, unknown>));
+      this.isAdmin.set(this._profile()?.role === 'admin');
+    }
   }
 
   async signInWithGoogle(): Promise<void> {
@@ -154,7 +170,7 @@ export class AuthService {
       fullName: user.displayName || '',
       email: user.email || '',
       phone: user.phoneNumber || '',
-      profileImageUrl: user.photoURL || '',
+      profileImage: user.photoURL || '',
       role: 'customer',
       isPhoneVerified: false,
       authProvider: 'google',
