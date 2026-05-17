@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Observable, map } from 'rxjs';
 import { Banner } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -9,11 +8,15 @@ export class BannersService {
   private readonly db = inject(Firestore);
   private readonly col = collection(this.db, 'banners');
 
+  /** Same pattern as categories: no composite index — filter/sort client-side. */
   list(): Observable<Banner[]> {
-    return collectionData(
-      query(this.col, where('isActive', '==', true), orderBy('sortOrder', 'asc')),
-      { idField: 'id' }
-    ) as Observable<Banner[]>;
+    return collectionData(this.col, { idField: 'id' }).pipe(
+      map((rows) =>
+        (rows as Banner[])
+          .filter((b) => b.isActive === true)
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      ),
+    );
   }
 
   listAll(): Observable<Banner[]> {
