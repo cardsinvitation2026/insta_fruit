@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
-import { LucideAngularModule, LayoutDashboard, Package, FolderTree, Image, ShoppingBag, Users, Undo2, LogOut, Leaf } from 'lucide-angular';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { LucideAngularModule, LayoutDashboard, Package, FolderTree, Image, ShoppingBag, Users, Undo2, LogOut, Leaf, ArrowLeft } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -19,14 +19,21 @@ import { AuthService } from '../../core/services/auth.service';
     <div data-testid="admin-layout" class="min-h-screen bg-[#F5F7F6] md:flex">
       <!-- Sidebar (desktop) / top bar (mobile) -->
       <aside class="md:w-64 md:min-h-screen bg-white md:border-r border-border-soft flex md:flex-col">
-        <div class="px-5 py-5 md:py-7 flex items-center gap-2 border-b border-border-soft">
-          <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-            <lucide-icon [img]="LeafIcon" [size]="18" class="text-white"></lucide-icon>
+        <div class="px-5 py-4 md:py-5 md:py-7 space-y-3 border-b border-border-soft">
+          <div class="flex items-center gap-2">
+            <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
+              <lucide-icon [img]="LeafIcon" [size]="18" class="text-white"></lucide-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-[14px] font-extrabold text-text-primary leading-tight truncate md:truncate-none">InstaFruit</p>
+              <p class="text-[11px] text-text-secondary">Admin Console</p>
+            </div>
           </div>
-          <div class="hidden md:block">
-            <p class="text-[14px] font-extrabold text-text-primary leading-tight">InstaFruit</p>
-            <p class="text-[11px] text-text-secondary">Admin Console</p>
-          </div>
+          <a routerLink="/home" data-testid="admin-back-store"
+             class="flex items-center justify-center md:justify-start gap-2 px-3 py-2 rounded-xl text-[13px] font-semibold bg-primary-light/70 hover:bg-primary-light text-primary border border-primary/15">
+            <lucide-icon [img]="BackIcon" [size]="16"></lucide-icon>
+            Back to store
+          </a>
         </div>
         <nav class="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible px-3 py-3 md:py-5 flex-1">
           @for (item of nav; track item.path) {
@@ -60,7 +67,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class AdminLayoutComponent {
   private readonly auth = inject(AuthService);
   readonly profile = this.auth.profile;
-  readonly LeafIcon = Leaf; readonly LogoutIcon = LogOut;
+  readonly LeafIcon = Leaf; readonly LogoutIcon = LogOut; readonly BackIcon = ArrowLeft;
 
   readonly nav = [
     { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },

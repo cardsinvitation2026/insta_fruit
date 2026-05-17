@@ -6,7 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, of } from 'rxjs';
 import { ProductsService } from '../../core/services/products.service';
 import { CartService } from '../../core/services/cart.service';
-import { Product } from '../../core/models';
+import { Product, productUnitPrice } from '../../core/models';
 import { QuantitySelectorComponent } from '../../shared/quantity-selector.component';
 import { ProductCardComponent } from '../../shared/product-card.component';
 
@@ -74,7 +74,7 @@ import { ProductCardComponent } from '../../shared/product-card.component';
           <button data-testid="add-to-cart-btn" (click)="addToCart()"
                   class="w-full h-14 bg-primary text-white rounded-btn flex items-center justify-center gap-2 text-[15px] font-bold shadow-green active:scale-[0.98]">
             <lucide-icon [img]="BagIcon" [size]="18"></lucide-icon>
-            Add to Cart • ₹{{ ((p.discountPrice ?? p.price) * qty()).toFixed(2) }}
+            Add to Cart • ₹{{ (unitPrice(p) * qty()).toFixed(2) }}
           </button>
         </div>
       </div>
@@ -109,6 +109,10 @@ export class ProductDetailsComponent {
     const p = this.product();
     return p?.id ? this.cart.isFavorite(p.id) : false;
   });
+
+  unitPrice(p: Product): number {
+    return productUnitPrice(p);
+  }
 
   back(): void { this.location.back(); }
   toggleFav(): void {

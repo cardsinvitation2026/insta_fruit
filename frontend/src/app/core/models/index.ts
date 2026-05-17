@@ -150,3 +150,17 @@ export interface Refund {
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
+
+/** Firestore clients may deserialize numbers as strings; normalize before math / `toFixed`. */
+export function coerceNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
+}
+
+export function productUnitPrice(p: Pick<Product, 'price' | 'discountPrice'>): number {
+  return coerceNumber(p.discountPrice ?? p.price, 0);
+}

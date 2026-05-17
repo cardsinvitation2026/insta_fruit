@@ -1,7 +1,7 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Firestore, doc, getDoc, setDoc, serverTimestamp } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
-import { CartItem, Product } from '../models';
+import { CartItem, Product, productUnitPrice } from '../models';
 
 const DELIVERY_FEE_INR = 25;
 
@@ -58,7 +58,7 @@ export class CartService {
       productId: product.id,
       name: product.name,
       thumbnail: product.thumbnail,
-      price: product.discountPrice ?? product.price,
+      price: productUnitPrice(product),
       unit: product.unit,
       quantity: idx >= 0 ? items[idx].quantity + quantity : quantity,
     };

@@ -1,25 +1,38 @@
-import { Injectable, inject } from '@angular/core';
-import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { Injectable } from '@angular/core';
 
 type Folder = 'products' | 'categories' | 'banners' | 'users';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class StorageService {
-  private readonly storage = inject(Storage);
 
-  async upload(folder: Folder, file: File, fileName?: string): Promise<string> {
-    const path = `${folder}/${Date.now()}-${fileName ?? file.name}`;
-    const r = ref(this.storage, path);
-    await uploadBytes(r, file, { contentType: file.type });
-    return await getDownloadURL(r);
+  private cloudName = 'dnmuwin6h';
+
+  private uploadPreset = 'instafruit_products';
+
+  async upload(folder: Folder, file: File): Promise<string> {
+
+    const formData = new FormData();
+
+    formData.append('file', file);
+    formData.append('upload_preset', this.uploadPreset);
+    formData.append('folder', folder);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    );
+
+    const data = await response.json();
+
+    return data.secure_url;
   }
 
   async delete(url: string): Promise<void> {
-    try {
-      const r = ref(this.storage, url);
-      await deleteObject(r);
-    } catch {
-      // already removed
-    }
+    console.log('Delete manually from Cloudinary');
   }
 }

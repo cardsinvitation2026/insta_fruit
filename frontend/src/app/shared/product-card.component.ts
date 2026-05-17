@@ -2,7 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Heart, Plus, Star } from 'lucide-angular';
-import { Product } from '../core/models';
+import { Product, productUnitPrice } from '../core/models';
 import { CartService } from '../core/services/cart.service';
 
 @Component({
@@ -47,7 +47,7 @@ export class ProductCardComponent {
   readonly HeartIcon = Heart; readonly PlusIcon = Plus; readonly StarIcon = Star;
 
   readonly isFav = computed(() => this.cart.isFavorite(this.product().id));
-  readonly priceLabel = computed(() => (this.product().discountPrice ?? this.product().price).toFixed(2));
+  readonly priceLabel = computed(() => productUnitPrice(this.product()).toFixed(2));
 
   open(): void { this.router.navigate(['/product', this.product().id]); }
   add(): void { this.cart.add(this.product(), 1); }
