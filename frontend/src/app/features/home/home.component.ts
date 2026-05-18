@@ -29,14 +29,8 @@ import { LocationService } from '../../core/services/location.service';
               <span>Deliver to</span>
             </div>
             <button type="button" data-testid="location-btn"
-                    class="flex items-center gap-1 text-white text-[15px] font-bold disabled:opacity-80"
-                    [disabled]="location.loading()"
-                    (click)="location.refresh(true)">
-              @if (location.loading()) {
-                <span class="text-[13px] font-semibold">Locating…</span>
-              } @else {
-                {{ location.area() }}
-              }
+                    class="flex items-center gap-1 text-white text-[15px] font-bold">
+              {{ location.area() }}
               <lucide-icon [img]="ChevronIcon" [size]="16"></lucide-icon>
             </button>
           </div>
@@ -151,7 +145,7 @@ export class HomeComponent implements OnInit {
   readonly MapPinIcon = MapPin; readonly BellIcon = Bell; readonly ChevronIcon = ChevronDown;
 
   ngOnInit(): void {
-    void this.location.refresh();
+    void this.location.loadSaved();
   }
 
   readonly categories = toSignal(this.catsSvc.list(), { initialValue: [] });

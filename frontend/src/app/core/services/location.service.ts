@@ -25,25 +25,21 @@ export class LocationService {
   private readonly fns = inject(Functions);
   private readonly auth = inject(AuthService);
 
-  readonly area = signal('Your area');
+  readonly area = signal('Add address');
   readonly loading = signal(false);
 
-  /** Resolve delivery area: saved address → session → GPS. */
-  async refresh(forceGps = false): Promise<void> {
+  /** Home header: only saved profile address (no GPS). */
+  async loadSaved(): Promise<void> {
     await this.waitForProfile();
-    if (!forceGps) {
-      const saved = this.auth.profile()?.defaultAddress;
-      if (saved) {
-        this.area.set(shortAreaFromAddress(saved));
-        return;
-      }
-      const session = readSession();
-      if (session?.locality) {
-        this.area.set(session.locality);
-        return;
-      }
-    }
+    const saved = this.auth.profile()?.defaultAddress;
+    this.area.set(saved ? shortAreaFromAddress(saved) : 'Add address');
+  }
 
+  /**
+   * GPS + reverse geocode — not used on home yet.
+   * Call from UI when enabling auto-location later.
+   */
+  async fetchFromGps(): Promise<void> {
     if (!navigator.geolocation) {
       this.area.set('Set location');
       return;
@@ -59,11 +55,12 @@ export class LocationService {
       writeSession({ locality: label, city: data.city });
       await this.persist(coords, data);
     } catch {
-      if (!readSession()?.locality) this.area.set('Set location');
+      await this.loadSaved();
     } finally {
       this.loading.set(false);
     }
   }
+
   private async persist(coords: { lat: number; lng: number }, data: GeocodeResult): Promise<void> {
     const uid = this.auth.user()?.uid;
     if (!uid) return;
@@ -93,7 +90,7 @@ export class LocationService {
 }
 
 function shortAreaFromAddress(addr: Address): string {
-  return addr.locality?.trim() || addr.label?.trim() || addr.city?.trim() || 'Your area';
+  return addr.locality?.trim() || addr.label?.trim() || addr.city?.trim() || 'Add address';
 }
 
 function geocodeToAddress(data: GeocodeResult, coords: { lat: number; lng: number }): Address {
@@ -107,15 +104,6 @@ function geocodeToAddress(data: GeocodeResult, coords: { lat: number; lng: numbe
     country: data.country,
     coordinates: coords,
   };
-}
-
-function readSession(): SessionLocation | null {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as SessionLocation) : null;
-  } catch {
-    return null;
-  }
 }
 
 function writeSession(loc: SessionLocation): void {
