@@ -42,7 +42,9 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
       </div>
 
       <div class="px-5 -mt-6 relative z-10">
-        <app-search-bar></app-search-bar>
+        <app-search-bar
+          [hint]="searchHint"
+          (searchSubmit)="onSearch($event)"></app-search-bar>
       </div>
 
       <!-- Promo banner from Firestore (uses first active banner) -->
@@ -127,6 +129,10 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
   `,
 })
 export class HomeComponent {
+  /** Shown under the search field (static copy). */
+  readonly searchHint =
+    'Type a fruit name (for example kiwi), then press Enter on the keyboard or tap the green search button on the right.';
+
   private readonly router = inject(Router);
   private readonly productsSvc = inject(ProductsService);
   private readonly catsSvc = inject(CategoriesService);
@@ -140,10 +146,32 @@ export class HomeComponent {
   readonly products = toSignal(this.productsSvc.list(), { initialValue: [] });
 
   readonly firstBanner = computed(() => this.banners()[0]);
-  readonly popular = computed(() => this.products().slice(0, 6));
+  readonly popular = computed(() => {
+    const catId = this.selectedCategory();
+    let list = this.products();
+    if (catId) {
+      const cat = this.categories().find((c) => c.id === catId);
+      list = list.filter(
+        (p) => p.categoryId === catId || (cat != null && p.categoryName === cat.name),
+      );
+    }
+    return list.slice(0, 6);
+  });
   readonly selectedCategory = signal<string>('');
   readonly firstName = computed(() => (this.auth.profile()?.fullName ?? '').split(' ')[0] || 'there');
   readonly city = computed(() => this.auth.profile()?.defaultAddress?.city ?? 'Your city');
 
-  goProducts(): void { this.router.navigate(['/products']); }
+  goProducts(): void {
+    const cat = this.selectedCategory();
+    this.router.navigate(['/products'], cat ? { queryParams: { category: cat } } : {});
+  }
+
+  onSearch(raw: string): void {
+    const q = raw.trim();
+    const cat = this.selectedCategory();
+    const queryParams: Record<string, string> = {};
+    if (cat) queryParams['category'] = cat;
+    if (q) queryParams['search'] = q;
+    this.router.navigate(['/products'], Object.keys(queryParams).length ? { queryParams } : {});
+  }
 }

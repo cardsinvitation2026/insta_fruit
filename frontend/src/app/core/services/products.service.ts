@@ -79,4 +79,14 @@ export class ProductsService {
     }
     return [...prefixes];
   }
+
+  /** Client-side filter: substring match on name, category, slug, and stored keywords. */
+  static matchesSearch(p: Product, raw: string): boolean {
+    const q = raw.trim().toLowerCase();
+    if (!q) return true;
+    const parts = [p.name, p.categoryName, p.slug, ...(p.searchKeywords ?? [])].map((s) =>
+      String(s ?? '').toLowerCase(),
+    );
+    return parts.some((s) => s.includes(q));
+  }
 }
