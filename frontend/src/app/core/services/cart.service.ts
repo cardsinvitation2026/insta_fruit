@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { CartItem, Product, productUnitPrice } from '../models';
 
 const DELIVERY_FEE_INR = 25;
-const CART_STORAGE_KEY = 'instafruit_cart';
 
 /** Firestore may contain junk entries like `[""]`; keep only non-empty product IDs. */
 function normalizeFavoriteIds(raw: unknown): string[] {
@@ -20,8 +19,9 @@ export class CartService {
   private readonly _items = signal<CartItem[]>([]);
   private readonly _favorites = signal<string[]>([]);
   private readonly _favoritesHydrated = signal(false);
-  /** Don't write empty cart to Firestore/localStorage before load finishes. */
   private readonly _cartHydrated = signal(false);
+  /** Must match auth.user().uid before reading/writing cart. */
+  private readonly _activeCartUid = signal<string | null>(null);
 
   readonly items = this._items.asReadonly();
   readonly favorites = this._favorites.asReadonly();
@@ -33,21 +33,20 @@ export class CartService {
   readonly total = computed(() => this.subtotal() + this.deliveryFee());
 
   constructor() {
+    // Cart: Firestore only — collection `cart/{uid}` (no localStorage / sessionStorage).
     effect(() => {
       const user = this.auth.user();
       const loading = this.auth.loading();
       const items = this._items();
-      if (!this._cartHydrated()) return;
-      if (loading) return;
-      if (user) {
-        void setDoc(doc(this.db, `cart/${user.uid}`), {
-          userId: user.uid,
-          items,
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
-      } else {
-        writeLocalCart(items);
-      }
+      const activeUid = this._activeCartUid();
+      if (!user || !this._cartHydrated() || loading) return;
+      if (user.uid !== activeUid) return;
+
+      void setDoc(doc(this.db, `cart/${user.uid}`), {
+        userId: user.uid,
+        items,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
     });
 
     effect(() => {
@@ -56,12 +55,19 @@ export class CartService {
       if (loading) return;
 
       this._cartHydrated.set(false);
-      if (user) {
-        void this.hydrateFromFirestore(user.uid).finally(() => this._cartHydrated.set(true));
-      } else {
-        this._items.set(readLocalCart());
+      this._activeCartUid.set(null);
+      this._items.set([]);
+
+      if (!user) {
         this._cartHydrated.set(true);
+        return;
       }
+
+      void this.hydrateFromFirestore(user.uid).finally(() => {
+        if (this.auth.user()?.uid !== user.uid) return;
+        this._activeCartUid.set(user.uid);
+        this._cartHydrated.set(true);
+      });
     });
 
     effect(() => {
@@ -91,12 +97,10 @@ export class CartService {
     try {
       const snap = await getDoc(doc(this.db, `cart/${uid}`));
       if (this.auth.user()?.uid !== uid) return;
-      const items = snap.exists()
-        ? ((snap.data() as { items?: CartItem[] }).items ?? [])
-        : readLocalCart();
-      this._items.set(items);
+      this._items.set(snap.exists() ? ((snap.data() as { items?: CartItem[] }).items ?? []) : []);
     } catch (e) {
       console.error('Failed to load cart', e);
+      if (this.auth.user()?.uid === uid) this._items.set([]);
     }
   }
 
@@ -153,22 +157,5 @@ export class CartService {
 
   isFavorite(productId: string): boolean {
     return this._favorites().includes(productId);
-  }
-}
-
-function readLocalCart(): CartItem[] {
-  try {
-    const raw = localStorage.getItem(CART_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CartItem[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocalCart(items: CartItem[]): void {
-  try {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  } catch {
-    /* private mode / quota */
   }
 }

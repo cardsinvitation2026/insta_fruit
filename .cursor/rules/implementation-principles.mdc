@@ -23,6 +23,16 @@ If requirements, behavior, or scope are unclear, ask the user first. Repeat unti
 
 Pick solutions that scale and stay maintainable, but avoid building for hypothetical futures. Balance durability with the smallest change that solves the real problem.
 
+## 5. User data isolation (never mix users)
+
+Cart, profile, orders, favorites, and any per-user state must be scoped to **that user only**.
+
+- Logged-in: use Firestore paths like `cart/{uid}` — never `localStorage` / `sessionStorage` for cart.
+- Do not use browser storage for cart; Firestore is the source of truth so cart follows the user across devices.
+- On login/logout/switch: clear in-memory state first, then load the new user's data.
+- Before persisting, verify `auth.uid` matches the active user for that data.
+- Never fall back to a global cache when loading a specific user's Firestore doc.
+
 ## Before coding
 
 - Can this be simpler?
