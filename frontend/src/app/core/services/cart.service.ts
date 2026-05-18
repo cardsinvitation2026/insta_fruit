@@ -5,6 +5,12 @@ import { CartItem, Product, productUnitPrice } from '../models';
 
 const DELIVERY_FEE_INR = 25;
 
+/** Firestore may contain junk entries like `[""]`; keep only non-empty product IDs. */
+function normalizeFavoriteIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
+}
+
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private readonly db = inject(Firestore);
@@ -12,6 +18,8 @@ export class CartService {
 
   private readonly _items = signal<CartItem[]>([]);
   private readonly _favorites = signal<string[]>([]);
+  /** Avoid writing empty favorites over Firestore before the user doc has been loaded. */
+  private readonly _favoritesHydrated = signal(false);
 
   readonly items = this._items.asReadonly();
   readonly favorites = this._favorites.asReadonly();
@@ -41,6 +49,30 @@ export class CartService {
       if (!user) { this._items.set([]); return; }
       void this.hydrate(user.uid);
     });
+
+    // Load favorites from `users/{uid}.favoriteProductIds` when signed in.
+    effect(() => {
+      const user = this.auth.user();
+      if (!user) {
+        this._favoritesHydrated.set(false);
+        this._favorites.set([]);
+        return;
+      }
+      this._favoritesHydrated.set(false);
+      void this.hydrateFavorites(user.uid);
+    });
+
+    // Persist favorites for signed-in users (after initial hydration).
+    effect(() => {
+      const user = this.auth.user();
+      const favs = this._favorites();
+      if (!user || !this._favoritesHydrated()) return;
+      void setDoc(
+        doc(this.db, `users/${user.uid}`),
+        { favoriteProductIds: favs, updatedAt: serverTimestamp() },
+        { merge: true },
+      );
+    });
   }
 
   private async hydrate(uid: string): Promise<void> {
@@ -48,6 +80,21 @@ export class CartService {
     if (snap.exists()) {
       const data = snap.data() as { items?: CartItem[] };
       this._items.set(data.items ?? []);
+    }
+  }
+
+  private async hydrateFavorites(uid: string): Promise<void> {
+    try {
+      const snap = await getDoc(doc(this.db, `users/${uid}`));
+      if (this.auth.user()?.uid !== uid) return;
+      const ids = snap.exists()
+        ? normalizeFavoriteIds((snap.data() as { favoriteProductIds?: unknown }).favoriteProductIds)
+        : [];
+      this._favorites.set(ids);
+      this._favoritesHydrated.set(true);
+    } catch (e) {
+      console.error('Failed to load favorites', e);
+      /* Stay non-hydrated so we don't persist [] over remote favorites before a successful read. */
     }
   }
 

@@ -99,6 +99,7 @@ export class AuthService {
       phone,
       role: 'customer',
       isPhoneVerified: false,
+      favoriteProductIds: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };

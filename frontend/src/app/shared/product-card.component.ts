@@ -16,9 +16,9 @@ import { CartService } from '../core/services/cart.service';
       <button [attr.data-testid]="'wishlist-' + product().id" type="button"
               class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-soft z-10"
               (click)="$event.stopPropagation(); toggleFav()">
+        <!-- lucide-icon rebuilds SVG when the class input string changes (split class bindings do not update it). -->
         <lucide-icon [img]="HeartIcon" [size]="16"
-          [class.fill-red-500]="isFav()" [class.text-red-500]="isFav()"
-          class="text-[#7A7A7A]"></lucide-icon>
+          [class]="heartClasses()"></lucide-icon>
       </button>
       <div class="h-28 flex items-center justify-center mb-3 bg-primary-light rounded-2xl">
         <img [src]="product().thumbnail" [alt]="product().name" class="h-24 w-24 object-contain drop-shadow-md" />
@@ -47,6 +47,9 @@ export class ProductCardComponent {
   readonly HeartIcon = Heart; readonly PlusIcon = Plus; readonly StarIcon = Star;
 
   readonly isFav = computed(() => this.cart.isFavorite(this.product().id));
+  readonly heartClasses = computed(() =>
+    this.isFav() ? 'text-red-500 fill-red-500' : 'text-[#7A7A7A]',
+  );
   readonly priceLabel = computed(() => productUnitPrice(this.product()).toFixed(2));
 
   open(): void { this.router.navigate(['/product', this.product().id]); }

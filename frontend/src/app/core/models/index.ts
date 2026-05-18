@@ -20,6 +20,8 @@ export interface AppUser {
   phone: string;
   role: UserRole;
   profileImage?: string;
+  /** Product IDs saved under `users/{uid}.favoriteProductIds` in Firestore. */
+  favoriteProductIds?: string[];
   defaultAddress?: Address;
   isPhoneVerified: boolean;
   isBlocked?: boolean;

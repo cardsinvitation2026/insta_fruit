@@ -24,9 +24,7 @@ import { ProductCardComponent } from '../../shared/product-card.component';
               <lucide-icon [img]="ChevronIcon" [size]="20" class="text-text-primary"></lucide-icon>
             </button>
             <button data-testid="fav-btn" (click)="toggleFav()" class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-soft">
-              <lucide-icon [img]="HeartIcon" [size]="18"
-                [class.text-red-500]="isFav()" [class.fill-red-500]="isFav()"
-                class="text-text-secondary"></lucide-icon>
+              <lucide-icon [img]="HeartIcon" [size]="18" [class]="detailHeartClasses()"></lucide-icon>
             </button>
           </div>
           <div class="flex items-center justify-center mt-4">
@@ -109,6 +107,9 @@ export class ProductDetailsComponent {
     const p = this.product();
     return p?.id ? this.cart.isFavorite(p.id) : false;
   });
+  readonly detailHeartClasses = computed(() =>
+    this.isFav() ? 'text-red-500 fill-red-500' : 'text-text-secondary',
+  );
 
   unitPrice(p: Product): number {
     return productUnitPrice(p);
