@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { CartItem, Product, productUnitPrice } from '../models';
 
 const DELIVERY_FEE_INR = 25;
+const CART_STORAGE_KEY = 'instafruit_cart';
 
 /** Firestore may contain junk entries like `[""]`; keep only non-empty product IDs. */
 function normalizeFavoriteIds(raw: unknown): string[] {
@@ -18,8 +19,9 @@ export class CartService {
 
   private readonly _items = signal<CartItem[]>([]);
   private readonly _favorites = signal<string[]>([]);
-  /** Avoid writing empty favorites over Firestore before the user doc has been loaded. */
   private readonly _favoritesHydrated = signal(false);
+  /** Don't write empty cart to Firestore/localStorage before load finishes. */
+  private readonly _cartHydrated = signal(false);
 
   readonly items = this._items.asReadonly();
   readonly favorites = this._favorites.asReadonly();
@@ -31,26 +33,37 @@ export class CartService {
   readonly total = computed(() => this.subtotal() + this.deliveryFee());
 
   constructor() {
-    // Persist cart to Firestore on every change for signed-in users.
     effect(() => {
       const user = this.auth.user();
+      const loading = this.auth.loading();
       const items = this._items();
-      if (!user) return;
-      void setDoc(doc(this.db, `cart/${user.uid}`), {
-        userId: user.uid,
-        items,
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+      if (!this._cartHydrated()) return;
+      if (loading) return;
+      if (user) {
+        void setDoc(doc(this.db, `cart/${user.uid}`), {
+          userId: user.uid,
+          items,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      } else {
+        writeLocalCart(items);
+      }
     });
 
-    // Load cart on login.
     effect(() => {
       const user = this.auth.user();
-      if (!user) { this._items.set([]); return; }
-      void this.hydrate(user.uid);
+      const loading = this.auth.loading();
+      if (loading) return;
+
+      this._cartHydrated.set(false);
+      if (user) {
+        void this.hydrateFromFirestore(user.uid).finally(() => this._cartHydrated.set(true));
+      } else {
+        this._items.set(readLocalCart());
+        this._cartHydrated.set(true);
+      }
     });
 
-    // Load favorites from `users/{uid}.favoriteProductIds` when signed in.
     effect(() => {
       const user = this.auth.user();
       if (!user) {
@@ -62,7 +75,6 @@ export class CartService {
       void this.hydrateFavorites(user.uid);
     });
 
-    // Persist favorites for signed-in users (after initial hydration).
     effect(() => {
       const user = this.auth.user();
       const favs = this._favorites();
@@ -75,11 +87,16 @@ export class CartService {
     });
   }
 
-  private async hydrate(uid: string): Promise<void> {
-    const snap = await getDoc(doc(this.db, `cart/${uid}`));
-    if (snap.exists()) {
-      const data = snap.data() as { items?: CartItem[] };
-      this._items.set(data.items ?? []);
+  private async hydrateFromFirestore(uid: string): Promise<void> {
+    try {
+      const snap = await getDoc(doc(this.db, `cart/${uid}`));
+      if (this.auth.user()?.uid !== uid) return;
+      const items = snap.exists()
+        ? ((snap.data() as { items?: CartItem[] }).items ?? [])
+        : readLocalCart();
+      this._items.set(items);
+    } catch (e) {
+      console.error('Failed to load cart', e);
     }
   }
 
@@ -94,7 +111,6 @@ export class CartService {
       this._favoritesHydrated.set(true);
     } catch (e) {
       console.error('Failed to load favorites', e);
-      /* Stay non-hydrated so we don't persist [] over remote favorites before a successful read. */
     }
   }
 
@@ -137,5 +153,22 @@ export class CartService {
 
   isFavorite(productId: string): boolean {
     return this._favorites().includes(productId);
+  }
+}
+
+function readLocalCart(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalCart(items: CartItem[]): void {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    /* private mode / quota */
   }
 }
