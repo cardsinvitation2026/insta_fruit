@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, MapPin, Bell, ChevronDown } from 'lucide-angular';
@@ -10,6 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ProductCardComponent } from '../../shared/product-card.component';
 import { SearchBarComponent } from '../../shared/search-bar.component';
 import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
+import { LocationService } from '../../core/services/location.service';
 
 @Component({
   selector: 'app-home',
@@ -27,8 +28,15 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
               <lucide-icon [img]="MapPinIcon" [size]="12"></lucide-icon>
               <span>Deliver to</span>
             </div>
-            <button class="flex items-center gap-1 text-white text-[15px] font-bold">
-              {{ city() }}
+            <button type="button" data-testid="location-btn"
+                    class="flex items-center gap-1 text-white text-[15px] font-bold disabled:opacity-80"
+                    [disabled]="location.loading()"
+                    (click)="location.refresh(true)">
+              @if (location.loading()) {
+                <span class="text-[13px] font-semibold">Locating…</span>
+              } @else {
+                {{ location.area() }}
+              }
               <lucide-icon [img]="ChevronIcon" [size]="16"></lucide-icon>
             </button>
           </div>
@@ -128,7 +136,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
     </div>
   `,
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   /** Shown under the search field (static copy). */
   readonly searchHint =
     'Type a fruit name (for example kiwi), then press Enter on the keyboard or tap the green search button on the right.';
@@ -138,8 +146,13 @@ export class HomeComponent {
   private readonly catsSvc = inject(CategoriesService);
   private readonly bannersSvc = inject(BannersService);
   private readonly auth = inject(AuthService);
+  readonly location = inject(LocationService);
 
   readonly MapPinIcon = MapPin; readonly BellIcon = Bell; readonly ChevronIcon = ChevronDown;
+
+  ngOnInit(): void {
+    void this.location.refresh();
+  }
 
   readonly categories = toSignal(this.catsSvc.list(), { initialValue: [] });
   readonly banners = toSignal(this.bannersSvc.list(), { initialValue: [] });
@@ -159,7 +172,6 @@ export class HomeComponent {
   });
   readonly selectedCategory = signal<string>('');
   readonly firstName = computed(() => (this.auth.profile()?.fullName ?? '').split(' ')[0] || 'there');
-  readonly city = computed(() => this.auth.profile()?.defaultAddress?.city ?? 'Your city');
 
   goProducts(): void {
     const cat = this.selectedCategory();

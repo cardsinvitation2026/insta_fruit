@@ -6,11 +6,22 @@ export interface Address {
   label: string;
   line1: string;
   line2?: string;
+  /** Short area for header (e.g. Koramangala). */
+  locality?: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
   phone?: string;
+  coordinates?: { lat: number; lng: number };
+}
+
+export interface LastLocation {
+  lat: number;
+  lng: number;
+  locality: string;
+  city: string;
+  fetchedAt: Timestamp | Date;
 }
 
 export interface AppUser {
@@ -23,6 +34,8 @@ export interface AppUser {
   /** Product IDs saved under `users/{uid}.favoriteProductIds` in Firestore. */
   favoriteProductIds?: string[];
   defaultAddress?: Address;
+  /** Latest GPS snapshot; does not replace a saved defaultAddress. */
+  lastLocation?: LastLocation;
   isPhoneVerified: boolean;
   isBlocked?: boolean;
   createdAt: Timestamp | Date;

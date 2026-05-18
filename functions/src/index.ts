@@ -21,7 +21,37 @@ const db = admin.firestore();
 
 const RAZORPAY_KEY_ID = defineSecret('RAZORPAY_KEY_ID');
 const RAZORPAY_KEY_SECRET = defineSecret('RAZORPAY_KEY_SECRET');
+const GOOGLE_MAPS_API_KEY = defineSecret('GOOGLE_MAPS_API_KEY');
 const REGION = 'asia-south1';
+
+interface GeocodeInput { lat: number; lng: number; }
+interface AddressComponent { long_name: string; short_name: string; types: string[]; }
+
+function pickComponent(components: AddressComponent[], type: string): string {
+  return components.find((c) => c.types.includes(type))?.long_name ?? '';
+}
+
+function parseGoogleResult(result: { address_components: AddressComponent[]; formatted_address: string }) {
+  const ac = result.address_components;
+  const locality =
+    pickComponent(ac, 'sublocality_level_1') ||
+    pickComponent(ac, 'sublocality') ||
+    pickComponent(ac, 'neighborhood') ||
+    pickComponent(ac, 'locality');
+  const city = pickComponent(ac, 'locality') || pickComponent(ac, 'administrative_area_level_2');
+  const route = pickComponent(ac, 'route');
+  const streetNumber = pickComponent(ac, 'street_number');
+  const line1 = [streetNumber, route].filter(Boolean).join(' ') || result.formatted_address.split(',')[0]?.trim() || '';
+  return {
+    locality: locality || city,
+    city: city || locality,
+    state: pickComponent(ac, 'administrative_area_level_1'),
+    postalCode: pickComponent(ac, 'postal_code'),
+    country: pickComponent(ac, 'country'),
+    line1,
+    formattedAddress: result.formatted_address,
+  };
+}
 
 interface CreateOrderInput { orderId: string; amount: number; currency?: 'INR'; }
 interface VerifyPaymentInput {
@@ -31,6 +61,33 @@ interface VerifyPaymentInput {
   orderId: string;
 }
 interface RefundInput { orderId: string; reason: string; }
+
+/** Reverse geocode GPS coordinates (Google Geocoding API). Works for guests. */
+export const reverseGeocode = onCall(
+  { region: REGION, secrets: [GOOGLE_MAPS_API_KEY] },
+  async (req) => {
+    const { lat, lng } = req.data as GeocodeInput;
+    if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      throw new HttpsError('invalid-argument', 'lat and lng required');
+    }
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      throw new HttpsError('invalid-argument', 'Invalid coordinates');
+    }
+    const key = GOOGLE_MAPS_API_KEY.value();
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${key}`;
+    const res = await fetch(url);
+    const data = (await res.json()) as {
+      status: string;
+      results?: { address_components: AddressComponent[]; formatted_address: string }[];
+      error_message?: string;
+    };
+    if (data.status !== 'OK' || !data.results?.[0]) {
+      logger.warn('Geocode failed', { status: data.status, message: data.error_message });
+      throw new HttpsError('not-found', data.error_message ?? 'Address not found');
+    }
+    return parseGoogleResult(data.results[0]);
+  }
+);
 
 /** Razorpay: create order on backend, return order to client to launch checkout. */
 export const createRazorpayOrder = onCall(

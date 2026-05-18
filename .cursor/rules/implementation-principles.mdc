@@ -1,0 +1,30 @@
+---
+description: Core implementation principles — simple, minimal, ask when unclear
+alwaysApply: true
+---
+
+# Implementation Principles
+
+Follow these on every task in this project.
+
+## 1. Best, simple, and right
+
+Choose the approach that is correct, easy to understand, and easy to maintain. Prefer clarity over cleverness.
+
+## 2. No over-engineering
+
+If the task can be done well in roughly 1–10 lines, do that. Do not add abstractions, layers, or patterns the problem does not need.
+
+## 3. Ask before assuming
+
+If requirements, behavior, or scope are unclear, ask the user first. Repeat until clear. Only implement after you understand what is wanted.
+
+## 4. Future-proof, not speculative
+
+Pick solutions that scale and stay maintainable, but avoid building for hypothetical futures. Balance durability with the smallest change that solves the real problem.
+
+## Before coding
+
+- Can this be simpler?
+- Am I assuming anything? If yes, ask.
+- Is this the smallest correct fix?
