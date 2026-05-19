@@ -24,8 +24,8 @@ import { Order, OrderStatus } from '../../core/models';
                 <tr class="border-t border-border-soft/60">
                   <td class="px-4 py-3 font-semibold">#{{ o.orderId.slice(-8).toUpperCase() }}</td>
                   <td class="px-4 py-3">
-                    <p class="font-semibold">{{ o.userName }}</p>
-                    <p class="text-[11px] text-text-secondary">{{ o.userPhone }}</p>
+                    <p class="font-semibold">{{ o.userName || 'Unknown Customer' }}</p>
+                    <p class="text-[11px] text-text-secondary">{{ o.userPhone || 'No Phone' }}</p>
                   </td>
                   <td class="px-4 py-3 text-right font-bold">₹{{ (o?.total ?? 0).toFixed(0) }}</td>
                   <td class="px-4 py-3">
@@ -36,7 +36,7 @@ import { Order, OrderStatus } from '../../core/models';
                           [class.text-red-500]="o.paymentStatus === 'failed' || o.paymentStatus === 'refunded'">{{ o.paymentMethod }}/{{ o.paymentStatus }}</span>
                   </td>
                   <td class="px-4 py-3">
-                    <select [ngModel]="o.orderStatus" (ngModelChange)="updateStatus(o, $event)"
+                    <select [ngModel]="statuses.includes(o.orderStatus) ? o.orderStatus : 'placed'" (ngModelChange)="updateStatus(o, $event)"
                             [attr.data-testid]="'status-' + o.orderId"
                             class="text-[12px] px-2 py-1.5 rounded-input border border-border-soft font-semibold">
                       @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }

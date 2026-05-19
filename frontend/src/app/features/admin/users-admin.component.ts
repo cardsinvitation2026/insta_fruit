@@ -21,7 +21,7 @@ import { AppUser } from '../../core/models';
             <tbody>
               @for (u of users(); track u.uid) {
                 <tr class="border-t border-border-soft/60">
-                  <td class="px-4 py-3 font-semibold">{{ u.fullName || '—' }}</td>
+                  <td class="px-4 py-3 font-semibold">{{ u.fullName || (u.email ? u.email.split('@')[0] : 'Unknown') }}</td>
                   <td class="px-4 py-3 text-text-secondary">{{ u.email }}</td>
                   <td class="px-4 py-3 text-text-secondary">{{ u.phone || '—' }}</td>
                   <td class="px-4 py-3 text-center">
