@@ -35,6 +35,14 @@ firebase use YOUR_PROJECT_ID
 firebase deploy --only firestore:rules,firestore:indexes,storage:rules
 ```
 
+Indexes are defined in `firestore.indexes.json` (project root). After adding/changing any `where` + `orderBy` query in Angular services, update that file and run:
+
+```bash
+firebase deploy --only firestore:indexes
+```
+
+New composite indexes can take a few minutes to build in Firebase Console → Firestore → Indexes.
+
 ## 4. Deploy Cloud Functions (Razorpay)
 
 ```bash
