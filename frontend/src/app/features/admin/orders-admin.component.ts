@@ -36,17 +36,21 @@ import { Order, OrderStatus } from '../../core/models';
                           [class.text-red-500]="o.paymentStatus === 'failed' || o.paymentStatus === 'refunded'">{{ o.paymentMethod }}/{{ o.paymentStatus }}</span>
                   </td>
                   <td class="px-4 py-3">
-                    <select [ngModel]="o.orderStatus" (ngModelChange)="updateStatus(o.orderId, $event)"
+                    <select [ngModel]="o.orderStatus" (ngModelChange)="updateStatus(o, $event)"
                             [attr.data-testid]="'status-' + o.orderId"
                             class="text-[12px] px-2 py-1.5 rounded-input border border-border-soft font-semibold">
                       @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
                     </select>
                   </td>
-                  <td class="px-4 py-3 text-right">
+                  <td class="px-4 py-3 text-right flex items-center justify-end gap-3">
                     @if (o.orderStatus === 'placed') {
-                      <button (click)="accept(o.orderId)" class="text-primary text-[12px] font-semibold mr-3">Accept</button>
+                      <button (click)="accept(o)" class="text-primary text-[12px] font-semibold">Accept</button>
                     }
-                    <button (click)="cancel(o.orderId)" class="text-red-500 text-[12px] font-semibold">Cancel</button>
+                    @if (o.orderStatus !== 'delivered' && o.orderStatus !== 'cancelled') {
+                      <button (click)="cancel(o)" class="text-red-500 text-[12px] font-semibold">Cancel</button>
+                    } @else {
+                      <span class="text-text-secondary text-[12px] font-semibold capitalize">{{ o.orderStatus }}</span>
+                    }
                   </td>
                 </tr>
               } @empty { <tr><td colspan="6" class="px-4 py-10 text-center text-text-secondary">No orders.</td></tr> }
@@ -62,10 +66,19 @@ export class OrdersAdminComponent {
   readonly orders = toSignal(this.ordersSvc.all(), { initialValue: [] as Order[] });
   readonly statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'packed', 'outForDelivery', 'delivered', 'cancelled'];
 
-  async updateStatus(id: string, status: OrderStatus): Promise<void> { await this.ordersSvc.updateStatus(id, status); }
-  async accept(id: string): Promise<void> { await this.ordersSvc.updateStatus(id, 'accepted'); }
-  async cancel(id: string): Promise<void> {
+  async updateStatus(order: Order, status: OrderStatus): Promise<void> { 
+    await this.ordersSvc.updateStatus(order.orderId, status);
+    await this.ordersSvc.notifyUser(order.userId, order.orderId, status);
+  }
+  async accept(order: Order): Promise<void> { 
+    await this.ordersSvc.updateStatus(order.orderId, 'accepted');
+    await this.ordersSvc.notifyUser(order.userId, order.orderId, 'accepted');
+  }
+  async cancel(order: Order): Promise<void> {
     const reason = prompt('Cancellation reason?') ?? '';
-    if (reason) await this.ordersSvc.cancel(id, reason);
+    if (reason) {
+      await this.ordersSvc.cancel(order.orderId, reason);
+      await this.ordersSvc.notifyUser(order.userId, order.orderId, 'cancelled');
+    }
   }
 }

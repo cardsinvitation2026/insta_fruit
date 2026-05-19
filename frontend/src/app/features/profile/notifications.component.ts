@@ -1,7 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { LucideAngularModule, ChevronLeft, Bell } from 'lucide-angular';
+import { LucideAngularModule, ChevronLeft, Bell, Calendar } from 'lucide-angular';
+import { Router } from '@angular/router';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { OrdersService } from '../../core/services/orders.service';
 import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 
 @Component({
@@ -19,19 +23,42 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
       </div>
 
       <div class="px-5 pt-6 space-y-3">
-        <div class="bg-white rounded-card p-4 shadow-soft flex gap-3">
-          <div class="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center shrink-0">
-            <lucide-icon [img]="BellIcon" [size]="18" class="text-primary"></lucide-icon>
+        @for (n of notifications(); track n.id) {
+          @if (n.orderId) {
+            <button type="button" (click)="trackOrder(n.orderId)" class="w-full text-left bg-white rounded-card p-4 shadow-soft flex gap-3 active:scale-[0.98] transition-transform">
+              <div class="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center shrink-0">
+                <lucide-icon [img]="BellIcon" [size]="18" class="text-primary"></lucide-icon>
+              </div>
+              <div>
+                <p class="text-[13px] font-bold text-text-primary">{{ n.title }}</p>
+                <p class="text-[12px] text-text-secondary mt-1 leading-relaxed">{{ n.message }}</p>
+              </div>
+            </button>
+          } @else {
+            <div class="w-full text-left bg-white rounded-card p-4 shadow-soft flex gap-3">
+              <div class="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center shrink-0">
+                <lucide-icon [img]="BellIcon" [size]="18" class="text-primary"></lucide-icon>
+              </div>
+              <div>
+                <p class="text-[13px] font-bold text-text-primary">{{ n.title }}</p>
+                <p class="text-[12px] text-text-secondary mt-1 leading-relaxed">{{ n.message }}</p>
+              </div>
+            </div>
+          }
+        } @empty {
+          <div class="bg-white rounded-card p-4 shadow-soft flex gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center shrink-0">
+              <lucide-icon [img]="BellIcon" [size]="18" class="text-primary"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-bold text-text-primary">Order updates</p>
+              <p class="text-[12px] text-text-secondary mt-1 leading-relaxed">
+                You will see order status on the track-order screen. We will also notify you here.
+              </p>
+            </div>
           </div>
-          <div>
-            <p class="text-[13px] font-bold text-text-primary">Order updates</p>
-            <p class="text-[12px] text-text-secondary mt-1 leading-relaxed">
-              You will see order status on the track-order screen. Email alerts go to
-              <span class="font-semibold text-text-primary">{{ auth.profile()?.email || 'your account email' }}</span>.
-            </p>
-          </div>
-        </div>
-        <p class="text-[11px] text-text-secondary text-center px-4">Push notifications can be added in a future update.</p>
+          <p class="text-[11px] text-text-secondary text-center px-4">No new notifications yet.</p>
+        }
       </div>
 
       <app-bottom-navbar></app-bottom-navbar>
@@ -40,8 +67,31 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
 })
 export class NotificationsComponent {
   private readonly location = inject(Location);
+  private readonly ordersSvc = inject(OrdersService);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthService);
+  
+  readonly notifications = toSignal(
+    toObservable(this.auth.user).pipe(
+      switchMap((u) => u ? this.ordersSvc.myNotifications(u.uid) : of([]))
+    ),
+    { initialValue: [] }
+  );
+
   readonly ChevronIcon = ChevronLeft;
   readonly BellIcon = Bell;
+
+  constructor() {
+    effect(() => {
+      const list = this.notifications();
+      for (const n of list) {
+        if (!n.isRead && n.id) {
+          void this.ordersSvc.markNotificationAsRead(n.id);
+        }
+      }
+    });
+  }
+
   back(): void { this.location.back(); }
+  trackOrder(orderId?: string): void { if (orderId) this.router.navigate(['/track-order', orderId]); }
 }

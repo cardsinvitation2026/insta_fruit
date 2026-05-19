@@ -2,8 +2,10 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, MapPin, Bell, ChevronDown } from 'lucide-angular';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, of } from 'rxjs';
 import { ProductsService } from '../../core/services/products.service';
+import { OrdersService } from '../../core/services/orders.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { BannersService } from '../../core/services/banners.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -34,9 +36,13 @@ import { LocationService } from '../../core/services/location.service';
               <lucide-icon [img]="ChevronIcon" [size]="16"></lucide-icon>
             </button>
           </div>
-          <button data-testid="notification-btn" class="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center relative">
+          <button data-testid="notification-btn" (click)="goNotifications()" class="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center relative active:scale-95 transition-transform cursor-pointer">
             <lucide-icon [img]="BellIcon" [size]="18"></lucide-icon>
-            <span class="absolute top-2.5 right-3 w-2 h-2 rounded-full bg-red-400"></span>
+            @if (unreadCount() > 0) {
+              <span class="absolute top-1 right-1.5 w-4 h-4 rounded-full bg-red-500 border-2 border-[#08B44D] flex items-center justify-center text-[9px] font-bold text-white shadow-sm">
+                {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+              </span>
+            }
           </button>
         </div>
         <h1 class="text-2xl font-extrabold leading-tight">Hello, {{ firstName() }} 👋</h1>
@@ -140,9 +146,19 @@ export class HomeComponent implements OnInit {
   private readonly catsSvc = inject(CategoriesService);
   private readonly bannersSvc = inject(BannersService);
   private readonly auth = inject(AuthService);
+  private readonly ordersSvc = inject(OrdersService);
   readonly location = inject(LocationService);
 
   readonly MapPinIcon = MapPin; readonly BellIcon = Bell; readonly ChevronIcon = ChevronDown;
+
+  readonly notifications = toSignal(
+    toObservable(this.auth.user).pipe(
+      switchMap((u) => u ? this.ordersSvc.myNotifications(u.uid) : of([]))
+    ),
+    { initialValue: [] }
+  );
+
+  readonly unreadCount = computed(() => this.notifications().filter(n => !n.isRead).length);
 
   ngOnInit(): void {
     void this.location.loadSaved();
@@ -179,5 +195,9 @@ export class HomeComponent implements OnInit {
     if (cat) queryParams['category'] = cat;
     if (q) queryParams['search'] = q;
     this.router.navigate(['/products'], Object.keys(queryParams).length ? { queryParams } : {});
+  }
+
+  goNotifications(): void {
+    this.router.navigate(['/notifications']);
   }
 }

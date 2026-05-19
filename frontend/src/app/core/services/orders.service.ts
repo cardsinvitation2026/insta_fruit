@@ -3,6 +3,7 @@ import { Firestore, collection, collectionData, doc, docData, addDoc, updateDoc,
   query, where, orderBy, serverTimestamp, Timestamp } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Order, OrderStatus, PaymentMethod } from '../models';
 
 interface CreateRazorpayInput { orderId: string; amount: number; currency?: 'INR'; }
@@ -63,6 +64,34 @@ export class OrdersService {
     await updateDoc(doc(this.db, `orders/${orderId}`), {
       orderStatus: 'cancelled', cancelReason: reason, updatedAt: serverTimestamp(),
     });
+  }
+
+  async notifyUser(userId: string, orderId: string, status: OrderStatus): Promise<void> {
+    await addDoc(collection(this.db, 'notifications'), {
+      userId,
+      orderId,
+      title: 'Order Update',
+      message: `Your order #${orderId.slice(-8).toUpperCase()} is now ${status}.`,
+      isRead: false,
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  myNotifications(userId: string): Observable<any[]> {
+    return (collectionData(
+      query(collection(this.db, 'notifications'), where('userId', '==', userId)),
+      { idField: 'id' }
+    ) as Observable<any[]>).pipe(
+      map(notifs => notifs.sort((a, b) => {
+        const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return tB - tA;
+      }))
+    );
+  }
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    await updateDoc(doc(this.db, `notifications/${id}`), { isRead: true });
   }
 
   // ---- Razorpay (via Cloud Functions) ----

@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { LucideAngularModule, ChevronLeft, Phone, MessageSquare } from 'lucide-angular';
+import { ActivatedRoute, Router } from '@angular/router';
+import { LucideAngularModule, ChevronLeft, Phone, MessageSquare, Home } from 'lucide-angular';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { OrdersService } from '../../core/services/orders.service';
 import { Order, OrderStatus } from '../../core/models';
@@ -75,6 +75,10 @@ const STEPS: OrderStatus[] = ['placed', 'accepted', 'preparing', 'packed', 'outF
         <div class="bg-white rounded-card p-5 shadow-soft">
           <app-order-status-stepper [activeIndex]="activeIndex()"></app-order-status-stepper>
         </div>
+        
+        <button (click)="goHome()" class="w-full mt-6 h-12 bg-primary-light text-primary rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors">
+          <lucide-icon [img]="HomeIcon" [size]="18"></lucide-icon> Back to Home
+        </button>
       </div>
     </div>
   `,
@@ -82,11 +86,13 @@ const STEPS: OrderStatus[] = ['placed', 'accepted', 'preparing', 'packed', 'outF
 export class TrackOrderComponent {
   private readonly location = inject(Location);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly ordersSvc = inject(OrdersService);
 
   readonly ChevronIcon = ChevronLeft;
   readonly PhoneIcon = Phone;
   readonly MessageIcon = MessageSquare;
+  readonly HomeIcon = Home;
 
   private readonly orderId = this.route.snapshot.paramMap.get('id') ?? '';
   readonly order = toSignal(this.ordersSvc.one(this.orderId), { initialValue: undefined as Order | undefined });
@@ -112,4 +118,5 @@ export class TrackOrderComponent {
   readonly remainingMin = computed(() => Math.max(0, Math.ceil((this.etaDate().getTime() - Date.now()) / 60000)));
 
   back(): void { this.location.back(); }
+  goHome(): void { this.router.navigate(['/home']); }
 }
