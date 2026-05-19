@@ -51,14 +51,14 @@ import { Address, OrderProduct, PaymentMethod } from '../../core/models';
                 <p class="text-[13px] font-bold text-text-primary">{{ address()!.label }}</p>
                 <p class="text-[12px] text-text-secondary leading-relaxed mt-0.5">{{ address()!.line1 }}<br/>{{ address()!.city }}, {{ address()!.state }} {{ address()!.postalCode }}</p>
               </div>
-              <div class="flex flex-col items-center gap-3 ml-2">
-                <button (click)="isEditingAddress.set(true)" class="text-primary hover:text-primary-dark transition-colors" aria-label="Edit Address">
-                  <lucide-icon [img]="PencilIcon" [size]="16"></lucide-icon>
-                </button>
-                <button (click)="deleteAddress()" class="text-red-400 hover:text-red-600 transition-colors" aria-label="Delete Address">
-                  <lucide-icon [img]="TrashIcon" [size]="16"></lucide-icon>
-                </button>
-              </div>
+                  <div class="flex flex-col gap-2 shrink-0">
+                    <button (click)="isEditingAddress.set(true)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-border-soft shadow-sm transition-colors active:bg-gray-50">
+                      <lucide-icon [img]="PencilIcon" [size]="16" class="text-text-secondary"></lucide-icon>
+                    </button>
+                    <button (click)="confirmDeleteAddress()" class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center border border-red-100 shadow-sm transition-colors active:bg-red-100">
+                      <lucide-icon [img]="TrashIcon" [size]="16" class="text-red-500"></lucide-icon>
+                    </button>
+                  </div>
             </div>
           } @else {
             <div class="bg-white rounded-card p-4 shadow-soft flex flex-col items-center justify-center py-6 border-2 border-dashed border-border-soft">
@@ -145,6 +145,22 @@ import { Address, OrderProduct, PaymentMethod } from '../../core/models';
           {{ loading() ? 'Processing…' : 'Place Order • ₹' + cart.total().toFixed(2) }}
         </button>
       </div>
+
+      @if (showDeleteConfirm()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <div class="bg-white w-full max-w-[340px] rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <lucide-icon [img]="TrashIcon" [size]="24" class="text-red-500"></lucide-icon>
+            </div>
+            <h3 class="text-center text-[18px] font-extrabold text-text-primary mb-2">Delete Address</h3>
+            <p class="text-center text-[13px] text-text-secondary mb-6 leading-relaxed">Are you sure you want to delete this address? This action cannot be undone.</p>
+            <div class="flex gap-3">
+              <button (click)="showDeleteConfirm.set(false)" class="flex-1 h-12 rounded-xl bg-[#F0F0F0] hover:bg-[#E5E5E5] text-text-primary font-bold text-[14px] transition-colors">Cancel</button>
+              <button (click)="deleteAddress()" class="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-[14px] transition-colors shadow-sm">Delete</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
 })
@@ -165,6 +181,7 @@ export class CheckoutComponent {
   readonly AlertIcon = AlertCircle; readonly TrashIcon = Trash2;
 
   readonly isEditingAddress = signal(false);
+  readonly showDeleteConfirm = signal(false);
   readonly LoaderIcon = Loader2;
 
   readonly address = computed<Address | undefined>(() => this.auth.profile()?.defaultAddress);
@@ -191,10 +208,15 @@ export class CheckoutComponent {
     }
   }
 
+  confirmDeleteAddress(): void {
+    this.showDeleteConfirm.set(true);
+  }
+
   async deleteAddress(): Promise<void> {
     const profile = this.auth.profile();
     if (!profile) return;
-    if (!confirm('Are you sure you want to delete this address?')) return;
+    
+    this.showDeleteConfirm.set(false);
     try {
       this.loading.set(true);
       await this.auth.updateProfile(profile.uid, { defaultAddress: null as any });

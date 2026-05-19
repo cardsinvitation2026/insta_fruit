@@ -92,25 +92,34 @@ import { LocationService } from '../../core/services/location.service';
           <a class="text-[12px] text-primary font-semibold" (click)="goProducts()">See all</a>
         </div>
         <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-5 px-5">
-          @for (cat of categories(); track cat.id) {
-            <button [attr.data-testid]="'category-' + cat.id" (click)="selectedCategory.set(cat.id)"
-                    class="flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all"
-                    [class.bg-white]="selectedCategory() !== cat.id"
-                    [class.shadow-soft]="selectedCategory() !== cat.id"
-                    [class.bg-primary]="selectedCategory() === cat.id"
-                    [class.text-white]="selectedCategory() === cat.id">
-              <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl overflow-hidden"
-                   [style.background]="selectedCategory() === cat.id ? 'rgba(255,255,255,0.18)' : '#EAF7EC'">
-                @if (cat.imageUrl) {
-                  <img [src]="cat.imageUrl" [alt]="cat.name" class="w-10 h-10 object-contain" />
-                } @else {
-                  <span>{{ cat.icon ?? '🍎' }}</span>
-                }
+          @if (categories() === undefined) {
+            @for (i of [1,2,3,4,5]; track i) {
+              <div class="flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-2xl bg-white shadow-soft animate-pulse">
+                <div class="w-12 h-12 rounded-full bg-border-soft/30"></div>
+                <div class="w-14 h-2.5 rounded-full bg-border-soft/30"></div>
               </div>
-              <span class="text-[12px] font-semibold">{{ cat.name }}</span>
-            </button>
-          } @empty {
+            }
+          } @else if (categories()?.length === 0) {
             <span class="text-[12px] text-text-secondary py-3">No categories yet — add from admin panel.</span>
+          } @else {
+            @for (cat of categories(); track cat.id) {
+              <button [attr.data-testid]="'category-' + cat.id" (click)="selectedCategory.set(cat.id)"
+                      class="flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all"
+                      [class.bg-white]="selectedCategory() !== cat.id"
+                      [class.shadow-soft]="selectedCategory() !== cat.id"
+                      [class.bg-primary]="selectedCategory() === cat.id"
+                      [class.text-white]="selectedCategory() === cat.id">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl overflow-hidden"
+                     [style.background]="selectedCategory() === cat.id ? 'rgba(255,255,255,0.18)' : '#EAF7EC'">
+                  @if (cat.imageUrl) {
+                    <img [src]="cat.imageUrl" [alt]="cat.name" class="w-10 h-10 object-contain" />
+                  } @else {
+                    <span>{{ cat.icon ?? '🍎' }}</span>
+                  }
+                </div>
+                <span class="text-[12px] font-semibold">{{ cat.name }}</span>
+              </button>
+            }
           }
         </div>
       </div>
@@ -122,12 +131,26 @@ import { LocationService } from '../../core/services/location.service';
           <a data-testid="see-all-products" class="text-[12px] text-primary font-semibold cursor-pointer" (click)="goProducts()">See all</a>
         </div>
         <div class="grid grid-cols-2 gap-4">
-          @for (p of popular(); track p.id) {
-            <app-product-card [product]="p"></app-product-card>
-          } @empty {
+          @if (popular() === undefined) {
+            @for (i of [1,2,3,4]; track i) {
+              <div class="bg-white rounded-card p-3 shadow-soft animate-pulse">
+                <div class="w-full aspect-square rounded-xl bg-border-soft/30 mb-3"></div>
+                <div class="w-3/4 h-3.5 rounded-full bg-border-soft/30 mb-2"></div>
+                <div class="w-1/2 h-2.5 rounded-full bg-border-soft/30 mb-3"></div>
+                <div class="flex justify-between items-center mt-2">
+                  <div class="w-10 h-5 rounded-full bg-border-soft/30"></div>
+                  <div class="w-8 h-8 rounded-full bg-border-soft/30"></div>
+                </div>
+              </div>
+            }
+          } @else if (popular()?.length === 0) {
             <div class="col-span-2 text-center text-[12px] text-text-secondary py-10">
               No products yet. Sign in as admin and add products to get started.
             </div>
+          } @else {
+            @for (p of popular()!; track p.id) {
+              <app-product-card [product]="p"></app-product-card>
+            }
           }
         </div>
       </div>
@@ -164,21 +187,24 @@ export class HomeComponent implements OnInit {
     void this.location.loadSaved();
   }
 
-  readonly categories = toSignal(this.catsSvc.list(), { initialValue: [] });
+  readonly categories = toSignal(this.catsSvc.list());
   readonly banners = toSignal(this.bannersSvc.list(), { initialValue: [] });
-  readonly products = toSignal(this.productsSvc.list(), { initialValue: [] });
+  readonly products = toSignal(this.productsSvc.list());
 
   readonly firstBanner = computed(() => this.banners()[0]);
   readonly popular = computed(() => {
+    const list = this.products();
+    if (list === undefined) return undefined;
     const catId = this.selectedCategory();
-    let list = this.products();
+    let filtered = list;
     if (catId) {
-      const cat = this.categories().find((c) => c.id === catId);
-      list = list.filter(
+      const cats = this.categories();
+      const cat = cats?.find((c) => c.id === catId);
+      filtered = list.filter(
         (p) => p.categoryId === catId || (cat != null && p.categoryName === cat.name),
       );
     }
-    return list.slice(0, 6);
+    return filtered.slice(0, 6);
   });
   readonly selectedCategory = signal<string>('');
   readonly firstName = computed(() => (this.auth.profile()?.fullName ?? '').split(' ')[0] || 'there');
