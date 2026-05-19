@@ -2,7 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Phone, MapPin, ShoppingBag, Heart, CreditCard, Bell, HelpCircle, LogOut, ChevronRight, Pencil, ShieldCheck, Loader2 } from 'lucide-angular';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { OrdersService } from '../../core/services/orders.service';
 import { StorageService } from '../../core/services/storage.service';
@@ -76,11 +77,12 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
       <div class="px-5 mt-7">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-[14px] font-bold text-text-primary">Order History</h3>
-          <a class="text-[12px] text-primary font-semibold">View all</a>
+          <button type="button" (click)="goOrders()" class="text-[12px] text-primary font-semibold">View all</button>
         </div>
         <div class="space-y-3">
           @for (o of orders().slice(0,3); track o.orderId) {
-            <div [attr.data-testid]="'order-' + o.orderId" class="bg-white rounded-card p-3 shadow-soft flex items-center gap-3">
+            <button type="button" (click)="trackOrder(o.orderId)" [attr.data-testid]="'order-' + o.orderId"
+                    class="w-full bg-white rounded-card p-3 shadow-soft flex items-center gap-3 text-left active:scale-[0.99]">
               <div class="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-xl">🍊</div>
               <div class="flex-1">
                 <p class="text-[13px] font-bold text-text-primary">Order #{{ o.orderId.slice(-8).toUpperCase() }}</p>
@@ -90,7 +92,7 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
                 <p class="text-[13px] font-extrabold text-primary">₹{{ o.total.toFixed(2) }}</p>
                 <span class="text-[10px] bg-primary-light text-primary px-2 py-0.5 rounded-full font-semibold">{{ o.orderStatus }}</span>
               </div>
-            </div>
+            </button>
           } @empty {
             <p class="text-[12px] text-text-secondary text-center py-4">No orders yet.</p>
           }
@@ -109,7 +111,8 @@ import { BottomNavbarComponent } from '../../shared/bottom-navbar.component';
           </button>
         }
         @for (m of menu; track m.label) {
-          <button class="w-full bg-white rounded-card p-3.5 shadow-soft flex items-center gap-3">
+          <button type="button" (click)="goMenu(m.route)" [attr.data-testid]="'menu-' + m.route"
+                  class="w-full bg-white rounded-card p-3.5 shadow-soft flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-primary-light flex items-center justify-center">
               <lucide-icon [img]="m.icon" [size]="16" class="text-primary"></lucide-icon>
             </div>
@@ -144,8 +147,10 @@ export class ProfileComponent {
   readonly profile = this.auth.profile;
   readonly isAdmin = this.auth.isAdmin;
   readonly orders = toSignal(
-    this.ordersSvc.myOrders(this.auth.user()?.uid ?? '_'),
-    { initialValue: [] }
+    toObservable(this.auth.user).pipe(
+      switchMap((u) => (u ? this.ordersSvc.myOrders(u.uid) : of([]))),
+    ),
+    { initialValue: [] },
   );
   readonly deliveredCount = computed(() => this.orders().filter((o) => o.orderStatus === 'delivered').length);
   readonly profileImage = computed(() => this.profile()?.profileImage ?? 'https://i.pravatar.cc/100?img=47');
@@ -155,15 +160,18 @@ export class ProfileComponent {
   readonly ChevronIcon = ChevronRight; readonly LogoutIcon = LogOut; readonly AdminIcon = ShieldCheck;
 
   readonly menu = [
-    { label: 'My Orders', icon: ShoppingBag },
-    { label: 'Wishlist', icon: Heart },
-    { label: 'Payment Methods', icon: CreditCard },
-    { label: 'Notifications', icon: Bell },
-    { label: 'Help & Support', icon: HelpCircle },
+    { label: 'My Orders', icon: ShoppingBag, route: '/orders' },
+    { label: 'Wishlist', icon: Heart, route: '/favorites' },
+    { label: 'Payment Methods', icon: CreditCard, route: '/payment-methods' },
+    { label: 'Notifications', icon: Bell, route: '/notifications' },
+    { label: 'Help & Support', icon: HelpCircle, route: '/help' },
   ];
 
   async logout(): Promise<void> { await this.auth.signOutUser(); }
-  goAdmin(): void { this.router.navigate(['/admin/dashboard']); }
+  goAdmin(): void { void this.router.navigate(['/admin/dashboard']); }
+  goOrders(): void { void this.router.navigate(['/orders']); }
+  goMenu(route: string): void { void this.router.navigate([route]); }
+  trackOrder(orderId: string): void { void this.router.navigate(['/track-order', orderId]); }
 
   async onAvatarSelected(event: Event, input: HTMLInputElement): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];

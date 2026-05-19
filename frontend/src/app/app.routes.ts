@@ -70,6 +70,26 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/profile/profile.component').then((m) => m.ProfileComponent),
   },
+  {
+    path: 'orders',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/orders/my-orders.component').then((m) => m.MyOrdersComponent),
+  },
+  {
+    path: 'payment-methods',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/profile/payment-methods.component').then((m) => m.PaymentMethodsComponent),
+  },
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/profile/notifications.component').then((m) => m.NotificationsComponent),
+  },
+  {
+    path: 'help',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/profile/help-support.component').then((m) => m.HelpSupportComponent),
+  },
 
   // Admin routes
   {
