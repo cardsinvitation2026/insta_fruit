@@ -10,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, LucideAngularModule],
   styles: [`
     :host { display: block; }
-    @media (min-width: 768px) {
+    @media (min-width: 768px) { 
       :host { position: fixed; inset: 0; z-index: 50; overflow: hidden; }
     }
     .nav-active { background: rgba(8, 180, 77, 0.1) !important; color: #08B44D !important; font-weight: 800 !important; }
