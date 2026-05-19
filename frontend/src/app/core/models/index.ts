@@ -100,6 +100,7 @@ export interface Cart {
 
 export type OrderStatus =
   | 'placed'
+  | 'accepted'
   | 'preparing'
   | 'packed'
   | 'outForDelivery'

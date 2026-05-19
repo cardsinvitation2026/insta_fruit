@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Check, Package, Truck, ShoppingBag, MapPin } from 'lucide-angular';
+import { LucideAngularModule, Check, Package, Truck, ShoppingBag, MapPin, CheckSquare } from 'lucide-angular';
 
 interface Step {
   label: string;
@@ -61,6 +61,7 @@ export class OrderStatusStepperComponent {
   readonly CheckIcon = Check;
   readonly steps: Step[] = [
     { label: 'Order Placed', icon: ShoppingBag },
+    { label: 'Accepted', icon: CheckSquare },
     { label: 'Preparing', icon: Package },
     { label: 'Packed', icon: Package },
     { label: 'Out for Delivery', icon: Truck },

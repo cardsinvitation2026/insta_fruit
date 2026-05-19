@@ -43,6 +43,9 @@ import { Order, OrderStatus } from '../../core/models';
                     </select>
                   </td>
                   <td class="px-4 py-3 text-right">
+                    @if (o.orderStatus === 'placed') {
+                      <button (click)="accept(o.orderId)" class="text-primary text-[12px] font-semibold mr-3">Accept</button>
+                    }
                     <button (click)="cancel(o.orderId)" class="text-red-500 text-[12px] font-semibold">Cancel</button>
                   </td>
                 </tr>
@@ -57,9 +60,10 @@ import { Order, OrderStatus } from '../../core/models';
 export class OrdersAdminComponent {
   private readonly ordersSvc = inject(OrdersService);
   readonly orders = toSignal(this.ordersSvc.all(), { initialValue: [] as Order[] });
-  readonly statuses: OrderStatus[] = ['placed', 'preparing', 'packed', 'outForDelivery', 'delivered', 'cancelled'];
+  readonly statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'packed', 'outForDelivery', 'delivered', 'cancelled'];
 
   async updateStatus(id: string, status: OrderStatus): Promise<void> { await this.ordersSvc.updateStatus(id, status); }
+  async accept(id: string): Promise<void> { await this.ordersSvc.updateStatus(id, 'accepted'); }
   async cancel(id: string): Promise<void> {
     const reason = prompt('Cancellation reason?') ?? '';
     if (reason) await this.ordersSvc.cancel(id, reason);

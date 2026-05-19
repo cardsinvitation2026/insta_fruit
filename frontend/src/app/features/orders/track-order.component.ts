@@ -7,7 +7,7 @@ import { OrdersService } from '../../core/services/orders.service';
 import { Order, OrderStatus } from '../../core/models';
 import { OrderStatusStepperComponent } from '../../shared/order-status-stepper.component';
 
-const STEPS: OrderStatus[] = ['placed', 'preparing', 'packed', 'outForDelivery', 'delivered'];
+const STEPS: OrderStatus[] = ['placed', 'accepted', 'preparing', 'packed', 'outForDelivery', 'delivered'];
 
 @Component({
   selector: 'app-track-order',
