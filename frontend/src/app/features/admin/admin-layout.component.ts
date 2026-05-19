@@ -12,7 +12,12 @@ import { AuthService } from '../../core/services/auth.service';
     :host { display: block; }
     /* Allow admin to break out of mobile shell on desktop */
     @media (min-width: 768px) {
-      :host { width: 100vw; margin-left: calc(-50vw + 215px); }
+      :host { 
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        overflow-y: auto;
+      }
     }
   `],
   template: `
